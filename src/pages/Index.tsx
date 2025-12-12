@@ -1,13 +1,35 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { HeroSection } from "@/components/home/HeroSection";
+import { FeaturedMatches } from "@/components/home/FeaturedMatches";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { LeaderboardPreview } from "@/components/home/LeaderboardPreview";
+import { CtaSection } from "@/components/home/CtaSection";
+import { Helmet } from "react-helmet-async";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <>
+      <Helmet>
+        <title>FootPredict Pro - Real-Time Football Predictions</title>
+        <meta
+          name="description"
+          content="Join the ultimate football prediction platform. Predict scores, scorers, and match outcomes. Compete with friends and climb the global leaderboard."
+        />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main>
+          <HeroSection />
+          <FeaturedMatches />
+          <HowItWorks />
+          <LeaderboardPreview />
+          <CtaSection />
+        </main>
+        <Footer />
       </div>
-    </div>
+    </>
   );
 };
 
