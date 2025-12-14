@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
@@ -15,7 +15,7 @@
     --popover: 220 18% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 142 76% 45%;
+    --primary: 185 80% 45%;
     --primary-foreground: 220 20% 6%;
 
     --secondary: 220 16% 16%;
@@ -24,7 +24,7 @@
     --muted: 220 14% 14%;
     --muted-foreground: 215 20% 55%;
 
-    --accent: 45 93% 58%;
+    --accent: 185 80% 55%;
     --accent-foreground: 220 20% 6%;
 
     --destructive: 0 84% 60%;
@@ -32,41 +32,41 @@
 
     --border: 220 16% 18%;
     --input: 220 16% 18%;
-    --ring: 142 76% 45%;
+    --ring: 185 80% 45%;
 
     --radius: 0.75rem;
 
-    /* Custom tokens */
+    /* Custom tokens - Changed from gold to cyan */
     --pitch: 142 76% 45%;
     --pitch-glow: 142 76% 55%;
-    --gold: 45 93% 58%;
-    --gold-glow: 45 93% 68%;
+    --cyan: 185 80% 55%;
+    --cyan-glow: 185 80% 65%;
     --live: 0 84% 60%;
     --live-glow: 0 84% 70%;
-    --upcoming: 210 76% 55%;
-    --upcoming-glow: 210 76% 65%;
+    --upcoming: 185 80% 50%;
+    --upcoming-glow: 185 80% 60%;
 
-    /* Gradients */
-    --gradient-pitch: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 76% 35%));
-    --gradient-gold: linear-gradient(135deg, hsl(45 93% 58%), hsl(35 93% 48%));
+    /* Gradients - Updated to cyan */
+    --gradient-pitch: linear-gradient(135deg, hsl(185 80% 45%), hsl(185 80% 35%));
+    --gradient-cyan: linear-gradient(135deg, hsl(185 80% 55%), hsl(185 80% 45%));
     --gradient-dark: linear-gradient(180deg, hsl(220 20% 8%), hsl(220 20% 4%));
     --gradient-card: linear-gradient(145deg, hsl(220 18% 12%), hsl(220 18% 8%));
     --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-    --gradient-hero: radial-gradient(ellipse at top, hsl(142 76% 45% / 0.15), transparent 60%);
+    --gradient-hero: radial-gradient(ellipse at top, hsl(185 80% 45% / 0.15), transparent 60%);
 
-    /* Shadows */
-    --shadow-glow: 0 0 40px hsl(142 76% 45% / 0.3);
+    /* Shadows - Updated to cyan */
+    --shadow-glow: 0 0 40px hsl(185 80% 45% / 0.3);
     --shadow-card: 0 8px 32px hsl(220 20% 0% / 0.4);
     --shadow-elevated: 0 16px 48px hsl(220 20% 0% / 0.5);
 
     --sidebar-background: 220 18% 8%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 142 76% 45%;
+    --sidebar-primary: 185 80% 45%;
     --sidebar-primary-foreground: 220 20% 6%;
     --sidebar-accent: 220 16% 16%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 220 16% 18%;
-    --sidebar-ring: 142 76% 45%;
+    --sidebar-ring: 185 80% 45%;
   }
 
   .dark {
@@ -76,19 +76,19 @@
     --card-foreground: 210 40% 98%;
     --popover: 220 18% 10%;
     --popover-foreground: 210 40% 98%;
-    --primary: 142 76% 45%;
+    --primary: 185 80% 45%;
     --primary-foreground: 220 20% 6%;
     --secondary: 220 16% 16%;
     --secondary-foreground: 210 40% 98%;
     --muted: 220 14% 14%;
     --muted-foreground: 215 20% 55%;
-    --accent: 45 93% 58%;
+    --accent: 185 80% 55%;
     --accent-foreground: 220 20% 6%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
     --border: 220 16% 18%;
     --input: 220 16% 18%;
-    --ring: 142 76% 45%;
+    --ring: 185 80% 45%;
   }
 }
 
@@ -122,18 +122,18 @@
     box-shadow: var(--shadow-glow);
   }
 
-  .glow-gold {
-    box-shadow: 0 0 40px hsl(var(--gold) / 0.3);
+  .glow-cyan {
+    box-shadow: 0 0 40px hsl(var(--cyan) / 0.3);
   }
 
   .gradient-text {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--pitch-glow)));
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   }
 
-  .gradient-text-gold {
+  .gradient-text-cyan {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--gold-glow)));
+    background-image: linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--cyan-glow)));
   }
 
   .card-elevated {
@@ -151,7 +151,7 @@
   }
 
   .status-upcoming {
-    @apply bg-upcoming text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+    @apply bg-upcoming text-primary-foreground px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
   }
 
   .status-finished {
