@@ -74,33 +74,33 @@ export function MatchCardAr({
       </div>
 
       {/* Teams */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
         {/* Away Team (Right side in RTL) */}
-        <div className="flex-1 flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-xl bg-secondary/50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+        <div className="flex-1 flex flex-col items-center text-center min-w-0">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-secondary/50 flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
             <img
               src={awayTeam.logo}
               alt={awayTeam.nameAr || awayTeam.name}
-              className="w-12 h-12 object-contain"
+              className="w-9 h-9 sm:w-12 sm:h-12 object-contain"
               onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
             />
           </div>
-          <span className="font-semibold text-sm leading-tight">{awayTeam.nameAr || awayTeam.name}</span>
+          <span className="font-semibold text-xs sm:text-sm leading-tight truncate max-w-full">{awayTeam.nameAr || awayTeam.name}</span>
         </div>
 
         {/* Score / VS */}
-        <div className="flex flex-col items-center px-4">
+        <div className="flex flex-col items-center px-2 sm:px-4 shrink-0">
           {status === "live" || status === "finished" ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <span className={cn(
-                "text-3xl font-display font-bold",
+                "text-2xl sm:text-3xl font-display font-bold",
                 status === "live" && "text-live"
               )}>
                 {awayTeam.score}
               </span>
-              <span className="text-muted-foreground text-lg">-</span>
+              <span className="text-muted-foreground text-base sm:text-lg">-</span>
               <span className={cn(
-                "text-3xl font-display font-bold",
+                "text-2xl sm:text-3xl font-display font-bold",
                 status === "live" && "text-live"
               )}>
                 {homeTeam.score}
@@ -108,28 +108,28 @@ export function MatchCardAr({
             </div>
           ) : (
             <div className="flex flex-col items-center">
-              <span className="text-2xl font-display font-bold text-muted-foreground">{t.vs}</span>
+              <span className="text-xl sm:text-2xl font-display font-bold text-muted-foreground">{t.vs}</span>
             </div>
           )}
           
           {/* Match Time */}
-          <div className="flex items-center gap-1.5 mt-2 text-muted-foreground">
-            <span className="text-xs font-medium">{kickoff}</span>
-            <Clock className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1 sm:gap-1.5 mt-1.5 sm:mt-2 text-muted-foreground">
+            <span className="text-[10px] sm:text-xs font-medium">{kickoff}</span>
+            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </div>
         </div>
 
         {/* Home Team (Left side in RTL) */}
-        <div className="flex-1 flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-xl bg-secondary/50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+        <div className="flex-1 flex flex-col items-center text-center min-w-0">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-secondary/50 flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
             <img
               src={homeTeam.logo}
               alt={homeTeam.nameAr || homeTeam.name}
-              className="w-12 h-12 object-contain"
+              className="w-9 h-9 sm:w-12 sm:h-12 object-contain"
               onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
             />
           </div>
-          <span className="font-semibold text-sm leading-tight">{homeTeam.nameAr || homeTeam.name}</span>
+          <span className="font-semibold text-xs sm:text-sm leading-tight truncate max-w-full">{homeTeam.nameAr || homeTeam.name}</span>
         </div>
       </div>
 
@@ -142,25 +142,25 @@ export function MatchCardAr({
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2 mt-6">
+      <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-6">
         {onViewFormation && (
           <Button
             variant="glass"
-            className="flex-1"
+            className="flex-1 text-xs sm:text-sm"
             onClick={onViewFormation}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {t.viewFormation}
           </Button>
         )}
         {status === "upcoming" && onPredict && (
           <Button
             variant="hero"
-            className="flex-1"
+            className="flex-1 text-xs sm:text-sm"
             onClick={onPredict}
           >
             {t.makePrediction}
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
         )}
       </div>

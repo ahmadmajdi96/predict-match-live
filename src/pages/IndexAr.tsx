@@ -130,22 +130,22 @@ const IndexAr = () => {
               <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-accent/20 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: "1s" }} />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px]" />
               
-              <div className="absolute top-20 right-20 animate-float">
-                <div className="w-16 h-16 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center backdrop-blur-sm">
-                  <Trophy className="w-8 h-8 text-primary" />
+              <div className="absolute top-20 right-10 md:right-20 animate-float hidden sm:block">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center backdrop-blur-sm">
+                  <Trophy className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                 </div>
               </div>
-              <div className="absolute bottom-32 left-20 animate-float" style={{ animationDelay: "2s" }}>
-                <div className="w-14 h-14 rounded-2xl bg-accent/20 border border-accent/30 flex items-center justify-center backdrop-blur-sm">
-                  <Crown className="w-7 h-7 text-accent" />
+              <div className="absolute bottom-32 left-10 md:left-20 animate-float hidden sm:block" style={{ animationDelay: "2s" }}>
+                <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-accent/20 border border-accent/30 flex items-center justify-center backdrop-blur-sm">
+                  <Crown className="w-5 h-5 md:w-7 md:h-7 text-accent" />
                 </div>
               </div>
-              <div className="absolute top-40 left-32 animate-float" style={{ animationDelay: "1s" }}>
+              <div className="absolute top-40 left-16 md:left-32 animate-float hidden md:block" style={{ animationDelay: "1s" }}>
                 <div className="w-12 h-12 rounded-xl bg-live/20 border border-live/30 flex items-center justify-center backdrop-blur-sm">
                   <Flame className="w-6 h-6 text-live" />
                 </div>
               </div>
-              <div className="absolute bottom-40 right-32 animate-float" style={{ animationDelay: "3s" }}>
+              <div className="absolute bottom-40 right-16 md:right-32 animate-float hidden md:block" style={{ animationDelay: "3s" }}>
                 <div className="w-14 h-14 rounded-2xl bg-upcoming/20 border border-upcoming/30 flex items-center justify-center backdrop-blur-sm">
                   <Medal className="w-7 h-7 text-upcoming" />
                 </div>
@@ -191,18 +191,18 @@ const IndexAr = () => {
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-center gap-4 md:gap-8 mt-16 animate-fade-in" style={{ animationDelay: "0.4s" }}>
+                <div className="flex flex-wrap items-center justify-center gap-3 md:gap-8 mt-10 md:mt-16 animate-fade-in" style={{ animationDelay: "0.4s" }}>
                   {stats.map((stat, index) => (
-                    <div key={index} className="gaming-card px-6 py-4 rounded-2xl">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                          <stat.icon className="w-5 h-5 text-primary" />
+                    <div key={index} className="gaming-card px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-primary/20 flex items-center justify-center">
+                          <stat.icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                         </div>
                         <div className="text-right">
-                          <div className="font-display text-2xl md:text-3xl font-bold gradient-text">
+                          <div className="font-display text-xl md:text-3xl font-bold gradient-text">
                             {stat.value}
                           </div>
-                          <div className="text-xs text-muted-foreground">{stat.label}</div>
+                          <div className="text-[10px] md:text-xs text-muted-foreground">{stat.label}</div>
                         </div>
                       </div>
                     </div>
