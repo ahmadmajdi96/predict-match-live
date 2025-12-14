@@ -35,10 +35,50 @@ interface Match {
   } | null;
 }
 
+// Check if we need to auto-sync (once per session, max every 30 minutes)
+const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+const LAST_SYNC_KEY = 'lastMatchesSync';
+
+async function autoSyncIfNeeded() {
+  const lastSync = localStorage.getItem(LAST_SYNC_KEY);
+  const now = Date.now();
+  
+  if (lastSync && now - parseInt(lastSync) < SYNC_INTERVAL) {
+    return; // Already synced recently
+  }
+  
+  try {
+    // Sync teams first
+    await supabase.functions.invoke('football-api', {
+      body: { action: 'syncTeams', syncToDb: true, leagueId: '233' }
+    });
+    
+    // Then sync matches
+    await supabase.functions.invoke('football-api', {
+      body: { action: 'syncMatches', syncToDb: true, leagueId: '233' }
+    });
+    
+    localStorage.setItem(LAST_SYNC_KEY, now.toString());
+    console.log('Auto-sync completed');
+  } catch (error) {
+    console.error('Auto-sync failed:', error);
+  }
+}
+
 export function useMatches(status?: string) {
   return useQuery({
     queryKey: ['matches', status],
     queryFn: async () => {
+      // First, check if we have matches
+      const { count } = await supabase
+        .from('matches')
+        .select('*', { count: 'exact', head: true });
+      
+      // If no matches, trigger auto-sync
+      if (count === 0) {
+        await autoSyncIfNeeded();
+      }
+      
       let query = supabase
         .from('matches')
         .select(`
