@@ -48,19 +48,17 @@ async function autoSyncIfNeeded() {
   }
   
   try {
-    // Sync teams first
     await supabase.functions.invoke('football-api', {
       body: { action: 'syncTeams', syncToDb: true, leagueId: '233' }
     });
     
-    // Then sync matches
     await supabase.functions.invoke('football-api', {
       body: { action: 'syncMatches', syncToDb: true, leagueId: '233' }
     });
     
     localStorage.setItem(LAST_SYNC_KEY, now.toString());
   } catch (error) {
-    // Auto-sync failed silently
+    toast.error('فشل في مزامنة المباريات تلقائياً');
   }
 }
 
