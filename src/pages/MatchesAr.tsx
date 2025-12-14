@@ -12,12 +12,15 @@ import { cn } from "@/lib/utils";
 import { translations as t } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
 import { useMatches } from "@/hooks/useMatches";
+import { useTeamPlayers } from "@/hooks/usePlayers";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
 interface MatchData {
   id: string;
+  homeTeamId?: string;
+  awayTeamId?: string;
   homeTeam: {
     name: string;
     nameAr?: string;
@@ -55,6 +58,43 @@ const tabs = [
   { id: "finished", label: t.finished, icon: CheckCircle },
 ];
 
+// Wrapper component to fetch players for formation view
+function FormationViewWrapper({ 
+  open, 
+  onOpenChange, 
+  match 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+  match: MatchData;
+}) {
+  const { data: homePlayers } = useTeamPlayers(match.homeTeamId);
+  const { data: awayPlayers } = useTeamPlayers(match.awayTeamId);
+
+  return (
+    <FormationView
+      open={open}
+      onOpenChange={onOpenChange}
+      homeTeam={{
+        name: match.homeTeam.name,
+        nameAr: match.homeTeam.nameAr,
+        logo: match.homeTeam.logo,
+        formation: match.homeTeam.formation || "4-3-3",
+        lineup: homePlayers?.lineup || [],
+        substitutes: homePlayers?.substitutes || [],
+      }}
+      awayTeam={{
+        name: match.awayTeam.name,
+        nameAr: match.awayTeam.nameAr,
+        logo: match.awayTeam.logo,
+        formation: match.awayTeam.formation || "4-3-3",
+        lineup: awayPlayers?.lineup || [],
+        substitutes: awayPlayers?.substitutes || [],
+      }}
+    />
+  );
+}
+
 
 
 const MatchesAr = () => {
@@ -78,6 +118,8 @@ const MatchesAr = () => {
 
     return {
       id: match.id,
+      homeTeamId: match.home_team?.id,
+      awayTeamId: match.away_team?.id,
       homeTeam: {
         name: match.home_team?.name || 'TBD',
         nameAr: match.home_team?.name_ar || undefined,
@@ -278,25 +320,10 @@ const MatchesAr = () => {
 
         {/* Formation View */}
         {formationMatch && (
-          <FormationView
+          <FormationViewWrapper
             open={formationOpen}
             onOpenChange={setFormationOpen}
-            homeTeam={{
-              name: formationMatch.homeTeam.name,
-              nameAr: formationMatch.homeTeam.nameAr,
-              logo: formationMatch.homeTeam.logo,
-              formation: formationMatch.homeTeam.formation || "4-3-3",
-              lineup: (formationMatch.homeTeam.players as any[]) || [],
-              substitutes: [],
-            }}
-            awayTeam={{
-              name: formationMatch.awayTeam.name,
-              nameAr: formationMatch.awayTeam.nameAr,
-              logo: formationMatch.awayTeam.logo,
-              formation: formationMatch.awayTeam.formation || "4-3-3",
-              lineup: (formationMatch.awayTeam.players as any[]) || [],
-              substitutes: [],
-            }}
+            match={formationMatch}
           />
         )}
       </div>
