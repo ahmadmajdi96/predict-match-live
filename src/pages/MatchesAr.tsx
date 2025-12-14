@@ -46,7 +46,6 @@ interface MatchData {
   weather?: string;
   status: "upcoming" | "live" | "finished";
   predictionPrice: number;
-  isDemo?: boolean;
 }
 
 const tabs = [
@@ -56,63 +55,6 @@ const tabs = [
   { id: "finished", label: t.finished, icon: CheckCircle },
 ];
 
-// Demo matches for when no API data is available
-const demoMatches: MatchData[] = [
-  {
-    id: "demo-1",
-    homeTeam: { 
-      name: "Al Ahly", 
-      nameAr: "الأهلي", 
-      logo: "https://media.api-sports.io/football/teams/1020.png",
-      formation: "4-2-3-1",
-      coach: "مارسيل كولر",
-      players: [
-        { id: "1", name: "Mohamed El Shenawy", nameAr: "محمد الشناوي", number: 1, position: "GK" },
-        { id: "2", name: "Ali Maaloul", nameAr: "علي معلول", number: 26, position: "LB" },
-        { id: "3", name: "Yasser Ibrahim", nameAr: "ياسر إبراهيم", number: 6, position: "CB" },
-        { id: "4", name: "Rami Rabia", nameAr: "رامي ربيعة", number: 2, position: "CB" },
-        { id: "5", name: "Akram Tawfik", nameAr: "أكرم توفيق", number: 12, position: "RB" },
-        { id: "6", name: "Hamdi Fathi", nameAr: "حمدي فتحي", number: 8, position: "CM" },
-        { id: "7", name: "Aliou Dieng", nameAr: "أليو دينغ", number: 4, position: "CDM" },
-        { id: "8", name: "Emam Ashour", nameAr: "إمام عاشور", number: 21, position: "CM" },
-        { id: "9", name: "Percy Tau", nameAr: "بيرسي تاو", number: 10, position: "RW" },
-        { id: "10", name: "Mohamed Sherif", nameAr: "محمد شريف", number: 9, position: "ST" },
-        { id: "11", name: "Hussein El Shahat", nameAr: "حسين الشحات", number: 11, position: "LW" },
-      ],
-    },
-    awayTeam: { 
-      name: "Zamalek", 
-      nameAr: "الزمالك", 
-      logo: "https://media.api-sports.io/football/teams/1021.png",
-      formation: "4-3-3",
-      coach: "خوان كارلوس",
-      players: [
-        { id: "a1", name: "Mahmoud Gennesh", nameAr: "محمود جنش", number: 1, position: "GK" },
-        { id: "a2", name: "Hazem Emam", nameAr: "حازم إمام", number: 7, position: "LB" },
-        { id: "a3", name: "Mahmoud Alaa", nameAr: "محمود علاء", number: 5, position: "CB" },
-        { id: "a4", name: "Mahmoud Hamdy", nameAr: "محمود حمدي الونش", number: 3, position: "CB" },
-        { id: "a5", name: "Ahmed Fatouh", nameAr: "أحمد فتوح", number: 2, position: "RB" },
-        { id: "a6", name: "Tariq Hamed", nameAr: "طارق حامد", number: 6, position: "CDM" },
-        { id: "a7", name: "Emam Ashour", nameAr: "إمام عاشور", number: 8, position: "CM" },
-        { id: "a8", name: "Ahmed Sayed Zizo", nameAr: "أحمد سيد زيزو", number: 10, position: "RW" },
-        { id: "a9", name: "Seif El Din", nameAr: "سيف الدين الجزيري", number: 9, position: "ST" },
-        { id: "a10", name: "Achraf Bencharki", nameAr: "أشرف بنشرقي", number: 11, position: "LW" },
-        { id: "a11", name: "Mohamed Ounajem", nameAr: "محمد أوناجم", number: 14, position: "CM" },
-      ],
-    },
-    league: "Egyptian Premier League",
-    leagueAr: "الدوري المصري الممتاز",
-    kickoff: "اليوم، 9:00 م",
-    kickoffDate: new Date(Date.now() + 3600000),
-    venue: "ستاد القاهرة الدولي",
-    stadium: "ستاد القاهرة الدولي",
-    referee: "محمد معروف",
-    weather: "صافي 25°م",
-    status: "upcoming",
-    predictionPrice: 10,
-    isDemo: true,
-  },
-];
 
 
 const MatchesAr = () => {
@@ -167,8 +109,7 @@ const MatchesAr = () => {
     };
   });
 
-  // Use demo matches if no DB matches
-  const allMatches = transformedMatches.length > 0 ? transformedMatches : demoMatches;
+  const allMatches = transformedMatches;
 
   const filteredMatches = allMatches.filter((match) => {
     const matchesTab = activeTab === "all" || match.status === activeTab;
@@ -187,10 +128,7 @@ const MatchesAr = () => {
       toast.error("يجب تسجيل الدخول أولاً للتوقع");
       return;
     }
-    if (match.isDemo) {
-      toast.error("هذه مباراة تجريبية. يرجى مزامنة المباريات الحقيقية أولاً.");
-      return;
-    }
+
     setSelectedMatch(match);
     setPredictionOpen(true);
   };
@@ -315,7 +253,7 @@ const MatchesAr = () => {
         <FooterAr />
 
         {/* Prediction Dialog */}
-        {selectedMatch && !selectedMatch.isDemo && (
+        {selectedMatch && (
           <MatchPredictionDialog
             open={predictionOpen}
             onOpenChange={setPredictionOpen}
