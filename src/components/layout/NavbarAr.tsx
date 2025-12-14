@@ -5,6 +5,7 @@ import { Menu, X, Trophy, LayoutDashboard, Shield, User, LogOut } from "lucide-r
 import { cn } from "@/lib/utils";
 import { translations as t } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationBell } from "./NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +47,7 @@ export function NavbarAr() {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-3">
+          {user && <NotificationBell />}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
