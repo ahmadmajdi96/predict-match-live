@@ -82,6 +82,7 @@ export function MatchCardAr({
               src={awayTeam.logo}
               alt={awayTeam.nameAr || awayTeam.name}
               className="w-12 h-12 object-contain"
+              onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
             />
           </div>
           <span className="font-semibold text-sm leading-tight">{awayTeam.nameAr || awayTeam.name}</span>
@@ -125,6 +126,7 @@ export function MatchCardAr({
               src={homeTeam.logo}
               alt={homeTeam.nameAr || homeTeam.name}
               className="w-12 h-12 object-contain"
+              onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
             />
           </div>
           <span className="font-semibold text-sm leading-tight">{homeTeam.nameAr || homeTeam.name}</span>
