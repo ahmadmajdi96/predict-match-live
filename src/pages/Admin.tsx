@@ -30,15 +30,17 @@ import {
   Trophy,
   Shield,
   Ban,
-  CheckCircle,
-  Edit,
   Save,
+  Wallet,
+  Award,
 } from "lucide-react";
 import { translations as t } from "@/lib/translations";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { ExpensesTab } from "@/components/admin/ExpensesTab";
+import { ContestSettingsTab } from "@/components/admin/ContestSettingsTab";
 
 interface League {
   id: string;
@@ -87,7 +89,6 @@ const Admin = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch leagues
       const { data: leaguesData } = await supabase
         .from('leagues')
         .select('*')
@@ -95,7 +96,6 @@ const Admin = () => {
       
       if (leaguesData) setLeagues(leaguesData);
 
-      // Fetch users with their roles
       const { data: usersData } = await supabase
         .from('profiles')
         .select('*')
@@ -125,7 +125,6 @@ const Admin = () => {
         setUsers(usersWithRoles);
       }
 
-      // Fetch stats
       const { count: usersCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
@@ -180,7 +179,6 @@ const Admin = () => {
   };
 
   const toggleUserBan = async (userId: string, currentRole: string) => {
-    // This would typically update a banned status
     toast.info("هذه الميزة قيد التطوير");
   };
 
@@ -214,7 +212,7 @@ const Admin = () => {
               </div>
               <div>
                 <h1 className="font-display text-3xl font-bold">{t.adminDashboard}</h1>
-                <p className="text-muted-foreground">إدارة المستخدمين والأسعار والإحصائيات</p>
+                <p className="text-muted-foreground">إدارة المستخدمين والأسعار والمصروفات</p>
               </div>
             </div>
 
@@ -278,11 +276,28 @@ const Admin = () => {
             </div>
 
             {/* Tabs */}
-            <Tabs defaultValue="pricing" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
-                <TabsTrigger value="pricing">{t.managePricing}</TabsTrigger>
-                <TabsTrigger value="users">{t.manageUsers}</TabsTrigger>
-                <TabsTrigger value="leaderboard">{t.leaderboard}</TabsTrigger>
+            <Tabs defaultValue="pricing" className="space-y-6" dir="rtl">
+              <TabsList className="w-full flex-wrap h-auto gap-2 bg-secondary/50 p-2 rounded-xl">
+                <TabsTrigger value="pricing" className="flex-1 min-w-[120px] gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  {t.managePricing}
+                </TabsTrigger>
+                <TabsTrigger value="contest" className="flex-1 min-w-[120px] gap-2">
+                  <Award className="w-4 h-4" />
+                  إعدادات المسابقة
+                </TabsTrigger>
+                <TabsTrigger value="expenses" className="flex-1 min-w-[120px] gap-2">
+                  <Wallet className="w-4 h-4" />
+                  المصروفات
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex-1 min-w-[120px] gap-2">
+                  <Users className="w-4 h-4" />
+                  {t.manageUsers}
+                </TabsTrigger>
+                <TabsTrigger value="leaderboard" className="flex-1 min-w-[120px] gap-2">
+                  <Trophy className="w-4 h-4" />
+                  {t.leaderboard}
+                </TabsTrigger>
               </TabsList>
 
               {/* Pricing Tab */}
@@ -333,39 +348,59 @@ const Admin = () => {
                     </div>
 
                     {/* Leagues Table */}
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-right">الدوري</TableHead>
-                          <TableHead className="text-right">السعر الحالي</TableHead>
-                          <TableHead className="text-right">الحالة</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {leagues.map((league) => (
-                          <TableRow key={league.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
-                                {league.logo_url && (
-                                  <img src={league.logo_url} alt="" className="w-6 h-6" />
-                                )}
-                                {league.name_ar || league.name}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {league.prediction_price} {t.currency}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={league.prediction_price > 0 ? "default" : "secondary"}>
-                                {league.prediction_price > 0 ? "مدفوع" : "مجاني"}
-                              </Badge>
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-right">الدوري</TableHead>
+                            <TableHead className="text-right">السعر الحالي</TableHead>
+                            <TableHead className="text-right">الحالة</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {leagues.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                لا توجد دوريات مسجلة
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            leagues.map((league) => (
+                              <TableRow key={league.id}>
+                                <TableCell className="font-medium">
+                                  <div className="flex items-center gap-2">
+                                    {league.logo_url && (
+                                      <img src={league.logo_url} alt="" className="w-6 h-6 object-contain" />
+                                    )}
+                                    {league.name_ar || league.name}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {league.prediction_price} {t.currency}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={league.prediction_price > 0 ? "default" : "secondary"}>
+                                    {league.prediction_price > 0 ? "مدفوع" : "مجاني"}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Contest Settings Tab */}
+              <TabsContent value="contest">
+                <ContestSettingsTab />
+              </TabsContent>
+
+              {/* Expenses Tab */}
+              <TabsContent value="expenses">
+                <ExpensesTab />
               </TabsContent>
 
               {/* Users Tab */}
@@ -378,52 +413,54 @@ const Admin = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-right">المستخدم</TableHead>
-                          <TableHead className="text-right">البريد الإلكتروني</TableHead>
-                          <TableHead className="text-right">الدور</TableHead>
-                          <TableHead className="text-right">التوقعات</TableHead>
-                          <TableHead className="text-right">تاريخ التسجيل</TableHead>
-                          <TableHead className="text-right">الإجراءات</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.map((profile) => (
-                          <TableRow key={profile.id}>
-                            <TableCell className="font-medium">
-                              {profile.display_name || "بدون اسم"}
-                            </TableCell>
-                            <TableCell dir="ltr" className="text-left">
-                              {profile.email}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={profile.role === 'admin' ? "default" : "secondary"}>
-                                {profile.role === 'admin' ? 'مدير' : 'مستخدم'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{profile.predictions_count}</TableCell>
-                            <TableCell>
-                              {profile.created_at
-                                ? new Date(profile.created_at).toLocaleDateString('ar-EG')
-                                : '-'}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => toggleUserBan(profile.id, profile.role || 'user')}
-                                >
-                                  <Ban className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-right">المستخدم</TableHead>
+                            <TableHead className="text-right">البريد الإلكتروني</TableHead>
+                            <TableHead className="text-right">الدور</TableHead>
+                            <TableHead className="text-right">التوقعات</TableHead>
+                            <TableHead className="text-right">تاريخ التسجيل</TableHead>
+                            <TableHead className="text-right">الإجراءات</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {users.map((profile) => (
+                            <TableRow key={profile.id}>
+                              <TableCell className="font-medium">
+                                {profile.display_name || "بدون اسم"}
+                              </TableCell>
+                              <TableCell dir="ltr" className="text-left">
+                                {profile.email}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={profile.role === 'admin' ? "default" : "secondary"}>
+                                  {profile.role === 'admin' ? 'مدير' : 'مستخدم'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{profile.predictions_count}</TableCell>
+                              <TableCell>
+                                {profile.created_at
+                                  ? new Date(profile.created_at).toLocaleDateString('ar-EG')
+                                  : '-'}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => toggleUserBan(profile.id, profile.role || 'user')}
+                                  >
+                                    <Ban className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -438,40 +475,42 @@ const Admin = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-right">{t.rank}</TableHead>
-                          <TableHead className="text-right">{t.player}</TableHead>
-                          <TableHead className="text-right">{t.totalPoints}</TableHead>
-                          <TableHead className="text-right">{t.predictions}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users
-                          .sort((a, b) => (b.predictions_count || 0) - (a.predictions_count || 0))
-                          .slice(0, 10)
-                          .map((profile, index) => (
-                            <TableRow key={profile.id}>
-                              <TableCell>
-                                <span className={
-                                  index === 0 ? "text-accent font-bold" :
-                                  index === 1 ? "text-muted-foreground font-bold" :
-                                  index === 2 ? "text-orange-500 font-bold" :
-                                  ""
-                                }>
-                                  #{index + 1}
-                                </span>
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                {profile.display_name || "بدون اسم"}
-                              </TableCell>
-                              <TableCell>0</TableCell>
-                              <TableCell>{profile.predictions_count}</TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-right">{t.rank}</TableHead>
+                            <TableHead className="text-right">{t.player}</TableHead>
+                            <TableHead className="text-right">{t.totalPoints}</TableHead>
+                            <TableHead className="text-right">{t.predictions}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users
+                            .sort((a, b) => (b.predictions_count || 0) - (a.predictions_count || 0))
+                            .slice(0, 10)
+                            .map((profile, index) => (
+                              <TableRow key={profile.id}>
+                                <TableCell>
+                                  <span className={
+                                    index === 0 ? "text-accent font-bold" :
+                                    index === 1 ? "text-muted-foreground font-bold" :
+                                    index === 2 ? "text-orange-500 font-bold" :
+                                    ""
+                                  }>
+                                    #{index + 1}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  {profile.display_name || "بدون اسم"}
+                                </TableCell>
+                                <TableCell>0</TableCell>
+                                <TableCell>{profile.predictions_count}</TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

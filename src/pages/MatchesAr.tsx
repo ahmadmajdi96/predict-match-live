@@ -1,16 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { NavbarAr } from "@/components/layout/NavbarAr";
 import { FooterAr } from "@/components/layout/FooterAr";
 import { MatchCardAr } from "@/components/match/MatchCardAr";
-import { FormationView } from "@/components/match/FormationView";
-import { PredictionDialog } from "@/components/match/PredictionDialog";
+import { MatchPredictionDialog } from "@/components/match/MatchPredictionDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Calendar, Flame, Clock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { translations as t } from "@/lib/translations";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -21,116 +19,210 @@ const tabs = [
   { id: "finished", label: t.finished, icon: CheckCircle },
 ];
 
-// Demo Egyptian league matches
+// Demo Egyptian league matches with more details
 const egyptianMatches = [
   {
     id: "1",
-    homeTeam: { name: "Al Ahly", nameAr: "الأهلي", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/3/37/Al_Ahly_SC_logo.svg/1200px-Al_Ahly_SC_logo.svg.png" },
-    awayTeam: { name: "Zamalek", nameAr: "الزمالك", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Zamalek_SC_logo.svg/800px-Zamalek_SC_logo.svg.png" },
+    homeTeam: { 
+      name: "Al Ahly", 
+      nameAr: "الأهلي", 
+      logo: "https://media.api-sports.io/football/teams/1020.png",
+      formation: "4-2-3-1",
+      coach: "مارسيل كولر",
+      players: [
+        { id: "1", name: "Mohamed El Shenawy", nameAr: "محمد الشناوي", number: 1, position: "GK" },
+        { id: "2", name: "Ali Maaloul", nameAr: "علي معلول", number: 26, position: "LB" },
+        { id: "3", name: "Yasser Ibrahim", nameAr: "ياسر إبراهيم", number: 6, position: "CB" },
+        { id: "4", name: "Rami Rabia", nameAr: "رامي ربيعة", number: 2, position: "CB" },
+        { id: "5", name: "Akram Tawfik", nameAr: "أكرم توفيق", number: 12, position: "RB" },
+        { id: "6", name: "Hamdi Fathi", nameAr: "حمدي فتحي", number: 8, position: "CM" },
+        { id: "7", name: "Aliou Dieng", nameAr: "أليو دينغ", number: 4, position: "CDM" },
+        { id: "8", name: "Emam Ashour", nameAr: "إمام عاشور", number: 21, position: "CM" },
+        { id: "9", name: "Percy Tau", nameAr: "بيرسي تاو", number: 10, position: "RW" },
+        { id: "10", name: "Mohamed Sherif", nameAr: "محمد شريف", number: 9, position: "ST" },
+        { id: "11", name: "Hussein El Shahat", nameAr: "حسين الشحات", number: 11, position: "LW" },
+      ],
+    },
+    awayTeam: { 
+      name: "Zamalek", 
+      nameAr: "الزمالك", 
+      logo: "https://media.api-sports.io/football/teams/1021.png",
+      formation: "4-3-3",
+      coach: "خوان كارلوس",
+      players: [
+        { id: "a1", name: "Mahmoud Gennesh", nameAr: "محمود جنش", number: 1, position: "GK" },
+        { id: "a2", name: "Hazem Emam", nameAr: "حازم إمام", number: 7, position: "LB" },
+        { id: "a3", name: "Mahmoud Alaa", nameAr: "محمود علاء", number: 5, position: "CB" },
+        { id: "a4", name: "Mahmoud Hamdy", nameAr: "محمود حمدي الونش", number: 3, position: "CB" },
+        { id: "a5", name: "Ahmed Fatouh", nameAr: "أحمد فتوح", number: 2, position: "RB" },
+        { id: "a6", name: "Tariq Hamed", nameAr: "طارق حامد", number: 6, position: "CDM" },
+        { id: "a7", name: "Emam Ashour", nameAr: "إمام عاشور", number: 8, position: "CM" },
+        { id: "a8", name: "Ahmed Sayed Zizo", nameAr: "أحمد سيد زيزو", number: 10, position: "RW" },
+        { id: "a9", name: "Seif El Din", nameAr: "سيف الدين الجزيري", number: 9, position: "ST" },
+        { id: "a10", name: "Achraf Bencharki", nameAr: "أشرف بنشرقي", number: 11, position: "LW" },
+        { id: "a11", name: "Mohamed Ounajem", nameAr: "محمد أوناجم", number: 14, position: "CM" },
+      ],
+    },
     league: "Egyptian Premier League",
     leagueAr: "الدوري المصري الممتاز",
     kickoff: "اليوم، 9:00 م",
+    kickoffDate: new Date(Date.now() + 3600000),
     venue: "ستاد القاهرة الدولي",
+    stadium: "ستاد القاهرة الدولي",
+    referee: "محمد معروف",
+    weather: "صافي 25°م",
     status: "upcoming" as const,
     predictionPrice: 10,
-    homeFormation: "4-2-3-1",
-    awayFormation: "4-3-3",
   },
   {
     id: "2",
-    homeTeam: { name: "Pyramids", nameAr: "بيراميدز", logo: "https://upload.wikimedia.org/wikipedia/en/9/9a/Pyramids_FC_logo.png", score: 2 },
-    awayTeam: { name: "Ismaily", nameAr: "الإسماعيلي", logo: "https://upload.wikimedia.org/wikipedia/en/1/1a/Ismaily_SC_logo.png", score: 1 },
+    homeTeam: { 
+      name: "Pyramids", 
+      nameAr: "بيراميدز", 
+      logo: "https://media.api-sports.io/football/teams/1025.png", 
+      score: 2,
+      formation: "4-4-2",
+      coach: "روجيريو ميكالي",
+      players: [],
+    },
+    awayTeam: { 
+      name: "Ismaily", 
+      nameAr: "الإسماعيلي", 
+      logo: "https://media.api-sports.io/football/teams/1026.png", 
+      score: 1,
+      formation: "3-5-2",
+      coach: "طلعت يوسف",
+      players: [],
+    },
     league: "Egyptian Premier League",
     leagueAr: "الدوري المصري الممتاز",
     kickoff: "67'",
     venue: "ستاد 30 يونيو",
+    stadium: "ستاد 30 يونيو",
+    referee: "أحمد الغندور",
     status: "live" as const,
     predictionPrice: 10,
-    homeFormation: "4-4-2",
-    awayFormation: "3-5-2",
   },
   {
     id: "3",
-    homeTeam: { name: "Ceramica Cleopatra", nameAr: "سيراميكا كليوباترا", logo: "https://upload.wikimedia.org/wikipedia/en/0/07/Ceramica_Cleopatra_FC_logo.png" },
-    awayTeam: { name: "Future FC", nameAr: "فيوتشر", logo: "https://upload.wikimedia.org/wikipedia/en/b/be/Future_FC_logo.png" },
+    homeTeam: { 
+      name: "Ceramica Cleopatra", 
+      nameAr: "سيراميكا كليوباترا", 
+      logo: "https://media.api-sports.io/football/teams/17256.png",
+      formation: "4-3-3",
+      coach: "علي ماهر",
+      players: [],
+    },
+    awayTeam: { 
+      name: "Future FC", 
+      nameAr: "فيوتشر", 
+      logo: "https://media.api-sports.io/football/teams/17257.png",
+      formation: "4-4-2",
+      coach: "سيد عبد الحفيظ",
+      players: [],
+    },
     league: "Egyptian Premier League",
     leagueAr: "الدوري المصري الممتاز",
     kickoff: "غداً، 7:00 م",
+    kickoffDate: new Date(Date.now() + 86400000),
     venue: "ستاد بتروسبورت",
+    stadium: "ستاد بتروسبورت",
+    referee: "محمود البنا",
     status: "upcoming" as const,
     predictionPrice: 5,
-    homeFormation: "4-3-3",
-    awayFormation: "4-4-2",
   },
   {
     id: "4",
-    homeTeam: { name: "Al Masry", nameAr: "المصري", logo: "https://upload.wikimedia.org/wikipedia/en/d/d4/Al_Masry_SC_logo.png", score: 0 },
-    awayTeam: { name: "Enppi", nameAr: "إنبي", logo: "https://upload.wikimedia.org/wikipedia/en/3/33/Enppi_Club_logo.png", score: 0 },
+    homeTeam: { 
+      name: "Al Masry", 
+      nameAr: "المصري", 
+      logo: "https://media.api-sports.io/football/teams/1028.png", 
+      score: 0,
+      formation: "4-2-3-1",
+      coach: "عادل عبد الرحمن",
+      players: [],
+    },
+    awayTeam: { 
+      name: "Enppi", 
+      nameAr: "إنبي", 
+      logo: "https://media.api-sports.io/football/teams/1029.png", 
+      score: 0,
+      formation: "4-3-3",
+      coach: "حمادة صدقي",
+      players: [],
+    },
     league: "Egyptian Premier League",
     leagueAr: "الدوري المصري الممتاز",
     kickoff: "انتهت",
     venue: "ستاد بورسعيد",
+    stadium: "ستاد بورسعيد",
+    referee: "محمد الحنفي",
     status: "finished" as const,
     predictionPrice: 5,
-    homeFormation: "4-2-3-1",
-    awayFormation: "4-3-3",
   },
   {
     id: "5",
-    homeTeam: { name: "Smouha", nameAr: "سموحة", logo: "https://upload.wikimedia.org/wikipedia/en/9/96/Smouha_SC_logo.png" },
-    awayTeam: { name: "Pharco", nameAr: "فاركو", logo: "https://upload.wikimedia.org/wikipedia/en/4/47/Pharco_FC_logo.png" },
+    homeTeam: { 
+      name: "Smouha", 
+      nameAr: "سموحة", 
+      logo: "https://media.api-sports.io/football/teams/1031.png",
+      formation: "4-4-2",
+      coach: "محمد عودة",
+      players: [],
+    },
+    awayTeam: { 
+      name: "Pharco", 
+      nameAr: "فاركو", 
+      logo: "https://media.api-sports.io/football/teams/17258.png",
+      formation: "4-3-3",
+      coach: "خالد جلال",
+      players: [],
+    },
     league: "Egyptian Premier League",
     leagueAr: "الدوري المصري الممتاز",
     kickoff: "السبت، 5:00 م",
+    kickoffDate: new Date(Date.now() + 172800000),
     venue: "ستاد الإسكندرية",
+    stadium: "ستاد الإسكندرية",
+    referee: "إبراهيم نور الدين",
     status: "upcoming" as const,
     predictionPrice: 5,
-    homeFormation: "4-4-2",
-    awayFormation: "4-3-3",
   },
   {
     id: "6",
-    homeTeam: { name: "Eastern Company", nameAr: "الشركة الشرقية", logo: "https://upload.wikimedia.org/wikipedia/en/8/83/Eastern_Company_SC_logo.png", score: 3 },
-    awayTeam: { name: "National Bank", nameAr: "البنك الأهلي", logo: "https://upload.wikimedia.org/wikipedia/en/5/5c/National_Bank_of_Egypt_SC_logo.png", score: 2 },
+    homeTeam: { 
+      name: "Eastern Company", 
+      nameAr: "الشركة الشرقية", 
+      logo: "https://media.api-sports.io/football/teams/17259.png", 
+      score: 3,
+      formation: "3-4-3",
+      coach: "محمد عمر",
+      players: [],
+    },
+    awayTeam: { 
+      name: "National Bank", 
+      nameAr: "البنك الأهلي", 
+      logo: "https://media.api-sports.io/football/teams/17260.png", 
+      score: 2,
+      formation: "4-2-3-1",
+      coach: "طارق العشري",
+      players: [],
+    },
     league: "Egyptian Premier League",
     leagueAr: "الدوري المصري الممتاز",
     kickoff: "انتهت",
     venue: "ستاد السلام",
+    stadium: "ستاد السلام",
+    referee: "محمد عادل",
     status: "finished" as const,
     predictionPrice: 5,
-    homeFormation: "3-4-3",
-    awayFormation: "4-2-3-1",
   },
-];
-
-// Demo players for formation
-const demoPlayers = [
-  { id: "1", name: "Mohamed El Shenawy", nameAr: "محمد الشناوي", number: 1, position: "GK" },
-  { id: "2", name: "Ali Maaloul", nameAr: "علي معلول", number: 26, position: "LB" },
-  { id: "3", name: "Yasser Ibrahim", nameAr: "ياسر إبراهيم", number: 6, position: "CB" },
-  { id: "4", name: "Rami Rabia", nameAr: "رامي ربيعة", number: 2, position: "CB" },
-  { id: "5", name: "Akram Tawfik", nameAr: "أكرم توفيق", number: 12, position: "RB" },
-  { id: "6", name: "Hamdi Fathi", nameAr: "حمدي فتحي", number: 8, position: "CM" },
-  { id: "7", name: "Aliou Dieng", nameAr: "أليو دينغ", number: 4, position: "CDM" },
-  { id: "8", name: "Emam Ashour", nameAr: "إمام عاشور", number: 21, position: "CM" },
-  { id: "9", name: "Percy Tau", nameAr: "بيرسي تاو", number: 10, position: "RW" },
-  { id: "10", name: "Mohamed Sherif", nameAr: "محمد شريف", number: 9, position: "ST" },
-  { id: "11", name: "Hussein El Shahat", nameAr: "حسين الشحات", number: 11, position: "LW" },
-];
-
-const demoSubstitutes = [
-  { id: "12", name: "Mostafa Shobeir", nameAr: "مصطفى شوبير", number: 22, position: "GK" },
-  { id: "13", name: "Mahmoud Metwally", nameAr: "محمود متولي", number: 3, position: "CB" },
-  { id: "14", name: "Ahmed Abdelkader", nameAr: "أحمد عبدالقادر", number: 14, position: "CM" },
-  { id: "15", name: "Wessam Abou Ali", nameAr: "وسام أبو علي", number: 7, position: "ST" },
-  { id: "16", name: "Karim Fouad", nameAr: "كريم فؤاد", number: 17, position: "LW" },
 ];
 
 const MatchesAr = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [formationOpen, setFormationOpen] = useState(false);
   const [predictionOpen, setPredictionOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<typeof egyptianMatches[0] | null>(null);
 
@@ -153,11 +245,6 @@ const MatchesAr = () => {
     setPredictionOpen(true);
   };
 
-  const handleViewFormation = (match: typeof egyptianMatches[0]) => {
-    setSelectedMatch(match);
-    setFormationOpen(true);
-  };
-
   return (
     <>
       <Helmet>
@@ -178,20 +265,20 @@ const MatchesAr = () => {
             {/* Filters */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-8">
               {/* Tabs */}
-              <div className="flex items-center gap-2 p-1 bg-secondary/50 rounded-xl">
+              <div className="flex items-center gap-2 p-1 bg-secondary/50 rounded-xl overflow-x-auto w-full lg:w-auto">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                      "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
                       activeTab === tab.id
                         ? "bg-primary text-primary-foreground shadow-lg"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <tab.icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span>{tab.label}</span>
                   </button>
                 ))}
               </div>
@@ -228,9 +315,26 @@ const MatchesAr = () => {
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <MatchCardAr
-                      {...match}
-                      onPredict={match.status === "upcoming" ? () => handlePredict(match) : undefined}
-                      onViewFormation={() => handleViewFormation(match)}
+                      homeTeam={{
+                        name: match.homeTeam.name,
+                        nameAr: match.homeTeam.nameAr,
+                        logo: match.homeTeam.logo,
+                        score: match.homeTeam.score,
+                      }}
+                      awayTeam={{
+                        name: match.awayTeam.name,
+                        nameAr: match.awayTeam.nameAr,
+                        logo: match.awayTeam.logo,
+                        score: match.awayTeam.score,
+                      }}
+                      league={match.league}
+                      leagueAr={match.leagueAr}
+                      kickoff={match.kickoff}
+                      venue={match.venue}
+                      status={match.status}
+                      predictionPrice={match.predictionPrice}
+                      onPredict={() => handlePredict(match)}
+                      onViewFormation={() => handlePredict(match)}
                     />
                   </div>
                 ))}
@@ -244,49 +348,26 @@ const MatchesAr = () => {
         </main>
         <FooterAr />
 
-        {/* Formation Dialog */}
+        {/* FIFA-Style Prediction Dialog */}
         {selectedMatch && (
-          <FormationView
-            open={formationOpen}
-            onOpenChange={setFormationOpen}
-            homeTeam={{
-              name: selectedMatch.homeTeam.name,
-              nameAr: selectedMatch.homeTeam.nameAr,
-              logo: selectedMatch.homeTeam.logo,
-              formation: selectedMatch.homeFormation,
-              lineup: demoPlayers,
-              substitutes: demoSubstitutes,
-            }}
-            awayTeam={{
-              name: selectedMatch.awayTeam.name,
-              nameAr: selectedMatch.awayTeam.nameAr,
-              logo: selectedMatch.awayTeam.logo,
-              formation: selectedMatch.awayFormation,
-              lineup: demoPlayers.map((p, i) => ({ ...p, id: `away-${i}` })),
-              substitutes: demoSubstitutes.map((p, i) => ({ ...p, id: `away-sub-${i}` })),
-            }}
-          />
-        )}
-
-        {/* Prediction Dialog */}
-        {selectedMatch && (
-          <PredictionDialog
+          <MatchPredictionDialog
             open={predictionOpen}
             onOpenChange={setPredictionOpen}
-            matchId={selectedMatch.id}
-            homeTeam={{
-              name: selectedMatch.homeTeam.name,
-              nameAr: selectedMatch.homeTeam.nameAr,
-              logo: selectedMatch.homeTeam.logo,
-              players: demoPlayers,
+            match={{
+              id: selectedMatch.id,
+              homeTeam: selectedMatch.homeTeam,
+              awayTeam: selectedMatch.awayTeam,
+              league: selectedMatch.league,
+              leagueAr: selectedMatch.leagueAr,
+              kickoff: selectedMatch.kickoff,
+              kickoffDate: selectedMatch.kickoffDate,
+              venue: selectedMatch.venue,
+              stadium: selectedMatch.stadium,
+              referee: selectedMatch.referee,
+              weather: selectedMatch.weather,
+              status: selectedMatch.status,
+              predictionPrice: selectedMatch.predictionPrice,
             }}
-            awayTeam={{
-              name: selectedMatch.awayTeam.name,
-              nameAr: selectedMatch.awayTeam.nameAr,
-              logo: selectedMatch.awayTeam.logo,
-              players: demoPlayers.map((p, i) => ({ ...p, id: `away-${i}` })),
-            }}
-            predictionPrice={selectedMatch.predictionPrice}
           />
         )}
       </div>
