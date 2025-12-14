@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { NavbarAr } from "@/components/layout/NavbarAr";
 import { FooterAr } from "@/components/layout/FooterAr";
