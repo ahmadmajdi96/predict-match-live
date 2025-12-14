@@ -156,7 +156,7 @@ const Matches = () => {
                       {...match}
                       onPredict={
                         match.status === "upcoming"
-                          ? () => console.log("Predict clicked")
+                          ? () => {}
                           : undefined
                       }
                     />

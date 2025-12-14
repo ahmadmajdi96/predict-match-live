@@ -82,7 +82,7 @@ export function ExpensesTab() {
       if (error) throw error;
       setExpenses(data || []);
     } catch (error) {
-      console.error('Error fetching expenses:', error);
+      // Error fetching expenses
     } finally {
       setLoading(false);
     }

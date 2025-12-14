@@ -26,12 +26,10 @@ serve(async (req) => {
     const adminEmail = "admin@cortanexai.com";
     const adminPassword = "123456";
 
-    // Check if admin already exists in auth
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     const existingAdmin = existingUsers?.users?.find(u => u.email === adminEmail);
 
     if (existingAdmin) {
-      // Check if already has admin role
       const { data: existingRole } = await supabase
         .from("user_roles")
         .select("*")
@@ -46,7 +44,6 @@ serve(async (req) => {
         );
       }
 
-      // Delete existing user role and add admin role
       await supabase
         .from("user_roles")
         .delete()
@@ -66,7 +63,6 @@ serve(async (req) => {
       );
     }
 
-    // Create new admin user
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: adminEmail,
       password: adminPassword,
@@ -81,10 +77,8 @@ serve(async (req) => {
     }
 
     if (authData.user) {
-      // Wait a bit for the trigger to create the profile and default role
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Delete the default 'user' role and add admin role
       await supabase
         .from("user_roles")
         .delete()
@@ -108,7 +102,6 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    console.error("Error:", error);
     const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),

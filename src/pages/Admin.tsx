@@ -153,7 +153,7 @@ const Admin = () => {
         totalRevenue,
       });
     } catch (error) {
-      console.error('Error fetching admin data:', error);
+      // Error fetching admin data
     } finally {
       setLoading(false);
     }

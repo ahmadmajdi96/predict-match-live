@@ -41,7 +41,7 @@ serve(async (req) => {
 
       case 'getFixtures':
         endpoint = '/fixtures';
-        params.append('league', leagueId || '233'); // Egyptian Premier League
+        params.append('league', leagueId || '233');
         params.append('season', currentSeason);
         break;
 
@@ -79,14 +79,12 @@ serve(async (req) => {
         break;
 
       case 'syncMatches':
-        // Fetch fixtures from API and sync to database
         endpoint = '/fixtures';
         params.append('league', leagueId || '233');
         params.append('season', currentSeason);
         break;
 
       case 'syncTeams':
-        // Sync teams to database
         endpoint = '/teams';
         params.append('league', leagueId || '233');
         params.append('season', currentSeason);
@@ -96,14 +94,11 @@ serve(async (req) => {
         throw new Error('Invalid action');
     }
 
-    console.log(`Fetching: ${baseUrl}${endpoint}?${params}`);
     const response = await fetch(`${baseUrl}${endpoint}?${params}`, { headers });
     const data = await response.json();
 
-    // If syncToDb is true, save data to Supabase
     if (syncToDb && data.response) {
       if (action === 'syncTeams') {
-        // First ensure league exists
         const { data: existingLeague } = await supabase
           .from('leagues')
           .select('id')
@@ -131,7 +126,6 @@ serve(async (req) => {
           leagueUuid = existingLeague.id;
         }
 
-        // Sync teams
         const teamsToUpsert = data.response.map((item: any) => ({
           api_id: item.team.id,
           name: item.team.name,
@@ -140,19 +134,12 @@ serve(async (req) => {
           league_id: leagueUuid
         }));
 
-        const { error: teamsError } = await supabase
+        await supabase
           .from('teams')
           .upsert(teamsToUpsert, { onConflict: 'api_id' });
-
-        if (teamsError) {
-          console.error('Error syncing teams:', teamsError);
-        } else {
-          console.log(`Synced ${teamsToUpsert.length} teams`);
-        }
       }
 
       if (action === 'syncMatches') {
-        // Get league UUID
         const { data: league } = await supabase
           .from('leagues')
           .select('id')
@@ -163,7 +150,6 @@ serve(async (req) => {
           throw new Error('League not found. Please sync teams first.');
         }
 
-        // Get all teams
         const { data: teams } = await supabase
           .from('teams')
           .select('id, api_id')
@@ -196,15 +182,9 @@ serve(async (req) => {
           };
         }).filter((m: any) => m.home_team_id && m.away_team_id);
 
-        const { error: matchesError } = await supabase
+        await supabase
           .from('matches')
           .upsert(matchesToUpsert, { onConflict: 'api_id' });
-
-        if (matchesError) {
-          console.error('Error syncing matches:', matchesError);
-        } else {
-          console.log(`Synced ${matchesToUpsert.length} matches`);
-        }
       }
     }
 
@@ -212,7 +192,6 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Football API Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
@@ -221,7 +200,6 @@ serve(async (req) => {
   }
 });
 
-// Helper function to get Arabic team names
 function getArabicTeamName(englishName: string): string {
   const arabicNames: Record<string, string> = {
     'Al Ahly': 'الأهلي',

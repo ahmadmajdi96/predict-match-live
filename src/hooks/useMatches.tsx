@@ -59,9 +59,8 @@ async function autoSyncIfNeeded() {
     });
     
     localStorage.setItem(LAST_SYNC_KEY, now.toString());
-    console.log('Auto-sync completed');
   } catch (error) {
-    console.error('Auto-sync failed:', error);
+    // Auto-sync failed silently
   }
 }
 
@@ -96,7 +95,6 @@ export function useMatches(status?: string) {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching matches:', error);
         throw error;
       }
 
@@ -134,8 +132,7 @@ export function useSyncMatches() {
       queryClient.invalidateQueries({ queryKey: ['matches'] });
       toast.success('تم تحديث المباريات بنجاح');
     },
-    onError: (error) => {
-      console.error('Sync error:', error);
+    onError: () => {
       toast.error('فشل في تحديث المباريات');
     },
   });
