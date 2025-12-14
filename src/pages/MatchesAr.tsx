@@ -4,13 +4,14 @@ import { NavbarAr } from "@/components/layout/NavbarAr";
 import { FooterAr } from "@/components/layout/FooterAr";
 import { MatchCardAr } from "@/components/match/MatchCardAr";
 import { MatchPredictionDialog } from "@/components/match/MatchPredictionDialog";
+import { FormationView } from "@/components/match/FormationView";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Calendar, Flame, Clock, CheckCircle, RefreshCw, Loader2 } from "lucide-react";
+import { Search, Filter, Calendar, Flame, Clock, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { translations as t } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
-import { useMatches, useSyncMatches } from "@/hooks/useMatches";
+import { useMatches } from "@/hooks/useMatches";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -116,13 +117,14 @@ const demoMatches: MatchData[] = [
 
 const MatchesAr = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
   const [predictionOpen, setPredictionOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<MatchData | null>(null);
+  const [formationOpen, setFormationOpen] = useState(false);
+  const [formationMatch, setFormationMatch] = useState<MatchData | null>(null);
   
   const { data: dbMatches, isLoading, refetch } = useMatches(activeTab === "all" ? undefined : activeTab);
-  const syncMatches = useSyncMatches();
 
   // Transform DB matches to component format
   const transformedMatches: MatchData[] = (dbMatches || []).map(match => {
@@ -193,8 +195,9 @@ const MatchesAr = () => {
     setPredictionOpen(true);
   };
 
-  const handleSync = async () => {
-    await syncMatches.mutateAsync();
+  const handleViewFormation = (match: MatchData) => {
+    setFormationMatch(match);
+    setFormationOpen(true);
   };
 
   return (
@@ -214,19 +217,6 @@ const MatchesAr = () => {
                 <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">{t.matches}</h1>
                 <p className="text-muted-foreground">تصفح مباريات الدوري المصري وقم بتوقعاتك</p>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={handleSync}
-                disabled={syncMatches.isPending}
-                className="gap-2"
-              >
-                {syncMatches.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                تحديث المباريات
-              </Button>
             </div>
 
             {/* Filters */}
@@ -278,9 +268,6 @@ const MatchesAr = () => {
             {!isLoading && (
               <p className="text-sm text-muted-foreground mb-6">
                 عرض {filteredMatches.length} مباراة
-                {allMatches === demoMatches && (
-                  <span className="text-accent mr-2">(بيانات تجريبية - اضغط "تحديث المباريات" للحصول على البيانات الحقيقية)</span>
-                )}
               </p>
             )}
 
@@ -313,7 +300,7 @@ const MatchesAr = () => {
                       status={match.status}
                       predictionPrice={match.predictionPrice}
                       onPredict={() => handlePredict(match)}
-                      onViewFormation={() => handlePredict(match)}
+                      onViewFormation={() => handleViewFormation(match)}
                     />
                   </div>
                 ))}
@@ -327,7 +314,7 @@ const MatchesAr = () => {
         </main>
         <FooterAr />
 
-        {/* FIFA-Style Prediction Dialog */}
+        {/* Prediction Dialog */}
         {selectedMatch && !selectedMatch.isDemo && (
           <MatchPredictionDialog
             open={predictionOpen}
@@ -348,6 +335,30 @@ const MatchesAr = () => {
               predictionPrice: selectedMatch.predictionPrice,
             }}
             onSuccess={() => refetch()}
+          />
+        )}
+
+        {/* Formation View */}
+        {formationMatch && (
+          <FormationView
+            open={formationOpen}
+            onOpenChange={setFormationOpen}
+            homeTeam={{
+              name: formationMatch.homeTeam.name,
+              nameAr: formationMatch.homeTeam.nameAr,
+              logo: formationMatch.homeTeam.logo,
+              formation: formationMatch.homeTeam.formation || "4-3-3",
+              lineup: (formationMatch.homeTeam.players as any[]) || [],
+              substitutes: [],
+            }}
+            awayTeam={{
+              name: formationMatch.awayTeam.name,
+              nameAr: formationMatch.awayTeam.nameAr,
+              logo: formationMatch.awayTeam.logo,
+              formation: formationMatch.awayTeam.formation || "4-3-3",
+              lineup: (formationMatch.awayTeam.players as any[]) || [],
+              substitutes: [],
+            }}
           />
         )}
       </div>
