@@ -31,7 +31,7 @@ const LeaderboardAr = () => {
       if (error) throw error;
       setLeaders(data || []);
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+      // Error fetching leaderboard
     } finally {
       setLoading(false);
     }

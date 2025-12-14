@@ -59,7 +59,7 @@ export function ContestSettingsTab() {
       });
       setEditedValues(values);
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      // Error fetching settings
     } finally {
       setLoading(false);
     }

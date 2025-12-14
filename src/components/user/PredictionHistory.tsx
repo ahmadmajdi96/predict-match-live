@@ -78,7 +78,7 @@ export function PredictionHistory() {
 
       setStats({ total, correct, pending, totalPoints });
     } catch (error) {
-      console.error('Error fetching predictions:', error);
+      // Error fetching predictions
     } finally {
       setLoading(false);
     }

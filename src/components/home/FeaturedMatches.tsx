@@ -83,7 +83,7 @@ export function FeaturedMatches() {
             >
               <MatchCard
                 {...match}
-                onPredict={match.status === "upcoming" ? () => console.log("Predict clicked") : undefined}
+                onPredict={match.status === "upcoming" ? () => {} : undefined}
               />
             </div>
           ))}

@@ -89,7 +89,7 @@ const DashboardAr = () => {
         rank: rank !== undefined && rank >= 0 ? `#${rank + 1}` : "-",
       });
     } catch (error) {
-      console.error('Error fetching user stats:', error);
+      // Error fetching user stats
     } finally {
       setLoading(false);
     }
