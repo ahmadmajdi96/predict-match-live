@@ -6,11 +6,47 @@ import { MatchCardAr } from "@/components/match/MatchCardAr";
 import { MatchPredictionDialog } from "@/components/match/MatchPredictionDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Calendar, Flame, Clock, CheckCircle } from "lucide-react";
+import { Search, Filter, Calendar, Flame, Clock, CheckCircle, RefreshCw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { translations as t } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
+import { useMatches, useSyncMatches } from "@/hooks/useMatches";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
+
+interface MatchData {
+  id: string;
+  homeTeam: {
+    name: string;
+    nameAr?: string;
+    logo: string;
+    score?: number;
+    formation?: string;
+    coach?: string;
+    players?: any[];
+  };
+  awayTeam: {
+    name: string;
+    nameAr?: string;
+    logo: string;
+    score?: number;
+    formation?: string;
+    coach?: string;
+    players?: any[];
+  };
+  league: string;
+  leagueAr?: string;
+  kickoff: string;
+  kickoffDate?: Date;
+  venue?: string;
+  stadium?: string;
+  referee?: string;
+  weather?: string;
+  status: "upcoming" | "live" | "finished";
+  predictionPrice: number;
+  isDemo?: boolean;
+}
 
 const tabs = [
   { id: "all", label: t.all, icon: Calendar },
@@ -19,10 +55,10 @@ const tabs = [
   { id: "finished", label: t.finished, icon: CheckCircle },
 ];
 
-// Demo Egyptian league matches with more details
-const egyptianMatches = [
+// Demo matches for when no API data is available
+const demoMatches: MatchData[] = [
   {
-    id: "1",
+    id: "demo-1",
     homeTeam: { 
       name: "Al Ahly", 
       nameAr: "الأهلي", 
@@ -71,178 +107,94 @@ const egyptianMatches = [
     stadium: "ستاد القاهرة الدولي",
     referee: "محمد معروف",
     weather: "صافي 25°م",
-    status: "upcoming" as const,
+    status: "upcoming",
     predictionPrice: 10,
-  },
-  {
-    id: "2",
-    homeTeam: { 
-      name: "Pyramids", 
-      nameAr: "بيراميدز", 
-      logo: "https://media.api-sports.io/football/teams/1025.png", 
-      score: 2,
-      formation: "4-4-2",
-      coach: "روجيريو ميكالي",
-      players: [],
-    },
-    awayTeam: { 
-      name: "Ismaily", 
-      nameAr: "الإسماعيلي", 
-      logo: "https://media.api-sports.io/football/teams/1026.png", 
-      score: 1,
-      formation: "3-5-2",
-      coach: "طلعت يوسف",
-      players: [],
-    },
-    league: "Egyptian Premier League",
-    leagueAr: "الدوري المصري الممتاز",
-    kickoff: "67'",
-    venue: "ستاد 30 يونيو",
-    stadium: "ستاد 30 يونيو",
-    referee: "أحمد الغندور",
-    status: "live" as const,
-    predictionPrice: 10,
-  },
-  {
-    id: "3",
-    homeTeam: { 
-      name: "Ceramica Cleopatra", 
-      nameAr: "سيراميكا كليوباترا", 
-      logo: "https://media.api-sports.io/football/teams/17256.png",
-      formation: "4-3-3",
-      coach: "علي ماهر",
-      players: [],
-    },
-    awayTeam: { 
-      name: "Future FC", 
-      nameAr: "فيوتشر", 
-      logo: "https://media.api-sports.io/football/teams/17257.png",
-      formation: "4-4-2",
-      coach: "سيد عبد الحفيظ",
-      players: [],
-    },
-    league: "Egyptian Premier League",
-    leagueAr: "الدوري المصري الممتاز",
-    kickoff: "غداً، 7:00 م",
-    kickoffDate: new Date(Date.now() + 86400000),
-    venue: "ستاد بتروسبورت",
-    stadium: "ستاد بتروسبورت",
-    referee: "محمود البنا",
-    status: "upcoming" as const,
-    predictionPrice: 5,
-  },
-  {
-    id: "4",
-    homeTeam: { 
-      name: "Al Masry", 
-      nameAr: "المصري", 
-      logo: "https://media.api-sports.io/football/teams/1028.png", 
-      score: 0,
-      formation: "4-2-3-1",
-      coach: "عادل عبد الرحمن",
-      players: [],
-    },
-    awayTeam: { 
-      name: "Enppi", 
-      nameAr: "إنبي", 
-      logo: "https://media.api-sports.io/football/teams/1029.png", 
-      score: 0,
-      formation: "4-3-3",
-      coach: "حمادة صدقي",
-      players: [],
-    },
-    league: "Egyptian Premier League",
-    leagueAr: "الدوري المصري الممتاز",
-    kickoff: "انتهت",
-    venue: "ستاد بورسعيد",
-    stadium: "ستاد بورسعيد",
-    referee: "محمد الحنفي",
-    status: "finished" as const,
-    predictionPrice: 5,
-  },
-  {
-    id: "5",
-    homeTeam: { 
-      name: "Smouha", 
-      nameAr: "سموحة", 
-      logo: "https://media.api-sports.io/football/teams/1031.png",
-      formation: "4-4-2",
-      coach: "محمد عودة",
-      players: [],
-    },
-    awayTeam: { 
-      name: "Pharco", 
-      nameAr: "فاركو", 
-      logo: "https://media.api-sports.io/football/teams/17258.png",
-      formation: "4-3-3",
-      coach: "خالد جلال",
-      players: [],
-    },
-    league: "Egyptian Premier League",
-    leagueAr: "الدوري المصري الممتاز",
-    kickoff: "السبت، 5:00 م",
-    kickoffDate: new Date(Date.now() + 172800000),
-    venue: "ستاد الإسكندرية",
-    stadium: "ستاد الإسكندرية",
-    referee: "إبراهيم نور الدين",
-    status: "upcoming" as const,
-    predictionPrice: 5,
-  },
-  {
-    id: "6",
-    homeTeam: { 
-      name: "Eastern Company", 
-      nameAr: "الشركة الشرقية", 
-      logo: "https://media.api-sports.io/football/teams/17259.png", 
-      score: 3,
-      formation: "3-4-3",
-      coach: "محمد عمر",
-      players: [],
-    },
-    awayTeam: { 
-      name: "National Bank", 
-      nameAr: "البنك الأهلي", 
-      logo: "https://media.api-sports.io/football/teams/17260.png", 
-      score: 2,
-      formation: "4-2-3-1",
-      coach: "طارق العشري",
-      players: [],
-    },
-    league: "Egyptian Premier League",
-    leagueAr: "الدوري المصري الممتاز",
-    kickoff: "انتهت",
-    venue: "ستاد السلام",
-    stadium: "ستاد السلام",
-    referee: "محمد عادل",
-    status: "finished" as const,
-    predictionPrice: 5,
+    isDemo: true,
   },
 ];
+
 
 const MatchesAr = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [predictionOpen, setPredictionOpen] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<typeof egyptianMatches[0] | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<MatchData | null>(null);
+  
+  const { data: dbMatches, isLoading, refetch } = useMatches(activeTab === "all" ? undefined : activeTab);
+  const syncMatches = useSyncMatches();
 
-  const filteredMatches = egyptianMatches.filter((match) => {
+  // Transform DB matches to component format
+  const transformedMatches: MatchData[] = (dbMatches || []).map(match => {
+    const kickoffDate = new Date(match.kickoff_time);
+    const isToday = new Date().toDateString() === kickoffDate.toDateString();
+    const kickoffText = isToday 
+      ? `اليوم، ${format(kickoffDate, 'h:mm a', { locale: ar })}`
+      : format(kickoffDate, 'EEEE، h:mm a', { locale: ar });
+
+    return {
+      id: match.id,
+      homeTeam: {
+        name: match.home_team?.name || 'TBD',
+        nameAr: match.home_team?.name_ar || undefined,
+        logo: match.home_team?.logo_url || '/placeholder.svg',
+        score: match.home_score ?? undefined,
+        formation: match.home_formation || '4-3-3',
+        coach: match.home_coach || undefined,
+        players: [],
+      },
+      awayTeam: {
+        name: match.away_team?.name || 'TBD',
+        nameAr: match.away_team?.name_ar || undefined,
+        logo: match.away_team?.logo_url || '/placeholder.svg',
+        score: match.away_score ?? undefined,
+        formation: match.away_formation || '4-3-3',
+        coach: match.away_coach || undefined,
+        players: [],
+      },
+      league: match.league?.name || 'Egyptian Premier League',
+      leagueAr: match.league?.name_ar || 'الدوري المصري الممتاز',
+      kickoff: match.status === 'finished' ? 'انتهت' : (match.status === 'live' ? 'مباشر' : kickoffText),
+      kickoffDate,
+      venue: match.stadium || undefined,
+      stadium: match.stadium || undefined,
+      referee: match.referee || undefined,
+      weather: match.weather || undefined,
+      status: (match.status as "upcoming" | "live" | "finished") || 'upcoming',
+      predictionPrice: match.league?.prediction_price || 10,
+    };
+  });
+
+  // Use demo matches if no DB matches
+  const allMatches = transformedMatches.length > 0 ? transformedMatches : demoMatches;
+
+  const filteredMatches = allMatches.filter((match) => {
     const matchesTab = activeTab === "all" || match.status === activeTab;
     const matchesSearch =
       searchQuery === "" ||
       match.homeTeam.nameAr?.includes(searchQuery) ||
       match.awayTeam.nameAr?.includes(searchQuery) ||
+      match.homeTeam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.awayTeam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.leagueAr?.includes(searchQuery);
     return matchesTab && matchesSearch;
   });
 
-  const handlePredict = (match: typeof egyptianMatches[0]) => {
+  const handlePredict = (match: MatchData) => {
     if (!user) {
       toast.error("يجب تسجيل الدخول أولاً للتوقع");
       return;
     }
+    if (match.isDemo) {
+      toast.error("هذه مباراة تجريبية. يرجى مزامنة المباريات الحقيقية أولاً.");
+      return;
+    }
     setSelectedMatch(match);
     setPredictionOpen(true);
+  };
+
+  const handleSync = async () => {
+    await syncMatches.mutateAsync();
   };
 
   return (
@@ -257,9 +209,24 @@ const MatchesAr = () => {
         <main className="pt-24 pb-12">
           <div className="container mx-auto px-4">
             {/* Header */}
-            <div className="mb-8">
-              <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">{t.matches}</h1>
-              <p className="text-muted-foreground">تصفح مباريات الدوري المصري وقم بتوقعاتك</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">{t.matches}</h1>
+                <p className="text-muted-foreground">تصفح مباريات الدوري المصري وقم بتوقعاتك</p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={handleSync}
+                disabled={syncMatches.isPending}
+                className="gap-2"
+              >
+                {syncMatches.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                تحديث المباريات
+              </Button>
             </div>
 
             {/* Filters */}
@@ -300,13 +267,25 @@ const MatchesAr = () => {
               </div>
             </div>
 
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            )}
+
             {/* Results Count */}
-            <p className="text-sm text-muted-foreground mb-6">
-              عرض {filteredMatches.length} مباراة
-            </p>
+            {!isLoading && (
+              <p className="text-sm text-muted-foreground mb-6">
+                عرض {filteredMatches.length} مباراة
+                {allMatches === demoMatches && (
+                  <span className="text-accent mr-2">(بيانات تجريبية - اضغط "تحديث المباريات" للحصول على البيانات الحقيقية)</span>
+                )}
+              </p>
+            )}
 
             {/* Matches Grid */}
-            {filteredMatches.length > 0 ? (
+            {!isLoading && filteredMatches.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredMatches.map((match, index) => (
                   <div
@@ -339,17 +318,17 @@ const MatchesAr = () => {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : !isLoading ? (
               <div className="text-center py-16">
                 <p className="text-muted-foreground">لا توجد مباريات مطابقة للبحث.</p>
               </div>
-            )}
+            ) : null}
           </div>
         </main>
         <FooterAr />
 
         {/* FIFA-Style Prediction Dialog */}
-        {selectedMatch && (
+        {selectedMatch && !selectedMatch.isDemo && (
           <MatchPredictionDialog
             open={predictionOpen}
             onOpenChange={setPredictionOpen}
@@ -368,6 +347,7 @@ const MatchesAr = () => {
               status: selectedMatch.status,
               predictionPrice: selectedMatch.predictionPrice,
             }}
+            onSuccess={() => refetch()}
           />
         )}
       </div>
