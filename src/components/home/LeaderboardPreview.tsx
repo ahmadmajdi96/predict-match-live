@@ -102,13 +102,13 @@ export function LeaderboardPreview() {
               </div>
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
-              Compete for <span className="gradient-text-gold">Glory</span>
+              Compete for <span className="gradient-text-cyan">Glory</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
               Every prediction counts. Climb the global rankings, earn exclusive badges, and prove you have what it takes to be the ultimate football oracle. Create private leagues and challenge your friends.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="gold" size="lg">
+              <Button variant="cyan" size="lg">
                 View Leaderboard
                 <ChevronRight className="w-5 h-5" />
               </Button>

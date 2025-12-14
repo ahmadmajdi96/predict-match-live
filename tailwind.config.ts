@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Cairo", "system-ui", "sans-serif"],
         display: ["Outfit", "system-ui", "sans-serif"],
       },
       colors: {
@@ -65,9 +65,9 @@ export default {
           DEFAULT: "hsl(var(--pitch))",
           glow: "hsl(var(--pitch-glow))",
         },
-        gold: {
-          DEFAULT: "hsl(var(--gold))",
-          glow: "hsl(var(--gold-glow))",
+        cyan: {
+          DEFAULT: "hsl(var(--cyan))",
+          glow: "hsl(var(--cyan-glow))",
         },
         live: {
           DEFAULT: "hsl(var(--live))",
