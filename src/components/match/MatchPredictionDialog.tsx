@@ -221,7 +221,7 @@ export function MatchPredictionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 gap-0">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden p-0 gap-0">
         {/* FIFA-Style Header */}
         <div className="relative bg-gradient-to-b from-card to-background p-6 border-b border-border">
           {/* Close Button */}
@@ -248,20 +248,20 @@ export function MatchPredictionDialog({
           </div>
 
           {/* Teams Display */}
-          <div className="flex items-center justify-center gap-8 mt-4">
+          <div className="flex items-center justify-center gap-4 md:gap-8 mt-4">
             {/* Away Team */}
             <div className="flex-1 flex flex-col items-center text-center">
-              <div className="w-20 h-20 rounded-2xl bg-secondary/50 flex items-center justify-center mb-3 border border-border/50">
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl bg-secondary/50 flex items-center justify-center mb-2 md:mb-3 border border-border/50">
                 <img
                   src={match.awayTeam.logo}
                   alt={match.awayTeam.nameAr || match.awayTeam.name}
-                  className="w-14 h-14 object-contain"
+                  className="w-10 h-10 md:w-14 md:h-14 object-contain"
                   onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
                 />
               </div>
-              <span className="font-bold text-lg">{match.awayTeam.nameAr || match.awayTeam.name}</span>
+              <span className="font-bold text-sm md:text-lg">{match.awayTeam.nameAr || match.awayTeam.name}</span>
               {match.awayTeam.coach && (
-                <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                <span className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1 mt-1 hidden sm:flex">
                   <User className="w-3 h-3" />
                   {match.awayTeam.coach}
                 </span>
@@ -269,27 +269,27 @@ export function MatchPredictionDialog({
             </div>
 
             {/* VS / Score */}
-            <div className="flex flex-col items-center px-6">
-              <span className="text-4xl font-display font-bold text-primary">VS</span>
-              <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                <Clock className="w-4 h-4" />
-                <span className="text-sm">{match.kickoff}</span>
+            <div className="flex flex-col items-center px-2 md:px-6">
+              <span className="text-2xl md:text-4xl font-display font-bold text-primary">VS</span>
+              <div className="flex items-center gap-1 md:gap-2 mt-1 md:mt-2 text-muted-foreground">
+                <Clock className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-xs md:text-sm">{match.kickoff}</span>
               </div>
             </div>
 
             {/* Home Team */}
             <div className="flex-1 flex flex-col items-center text-center">
-              <div className="w-20 h-20 rounded-2xl bg-secondary/50 flex items-center justify-center mb-3 border border-border/50">
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl bg-secondary/50 flex items-center justify-center mb-2 md:mb-3 border border-border/50">
                 <img
                   src={match.homeTeam.logo}
                   alt={match.homeTeam.nameAr || match.homeTeam.name}
-                  className="w-14 h-14 object-contain"
+                  className="w-10 h-10 md:w-14 md:h-14 object-contain"
                   onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
                 />
               </div>
-              <span className="font-bold text-lg">{match.homeTeam.nameAr || match.homeTeam.name}</span>
+              <span className="font-bold text-sm md:text-lg">{match.homeTeam.nameAr || match.homeTeam.name}</span>
               {match.homeTeam.coach && (
-                <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                <span className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1 mt-1 hidden sm:flex">
                   <User className="w-3 h-3" />
                   {match.homeTeam.coach}
                 </span>
@@ -298,19 +298,19 @@ export function MatchPredictionDialog({
           </div>
 
           {/* League & Venue Info */}
-          <div className="flex items-center justify-center gap-6 mt-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 mt-3 md:mt-4 text-xs md:text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
-              <Trophy className="w-4 h-4 text-accent" />
+              <Trophy className="w-3 h-3 md:w-4 md:h-4 text-accent" />
               {match.leagueAr || match.league}
             </span>
             {match.stadium && (
-              <span className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
+              <span className="flex items-center gap-1 hidden sm:flex">
+                <MapPin className="w-3 h-3 md:w-4 md:h-4" />
                 {match.stadium}
               </span>
             )}
             {match.referee && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 hidden md:flex">
                 <User className="w-4 h-4" />
                 {match.referee}
               </span>
