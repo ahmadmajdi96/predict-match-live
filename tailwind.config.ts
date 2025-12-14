@@ -65,9 +65,9 @@ export default {
           DEFAULT: "hsl(var(--pitch))",
           glow: "hsl(var(--pitch-glow))",
         },
-        cyan: {
-          DEFAULT: "hsl(var(--cyan))",
-          glow: "hsl(var(--cyan-glow))",
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          glow: "hsl(var(--gold-glow))",
         },
         live: {
           DEFAULT: "hsl(var(--live))",
