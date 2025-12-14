@@ -1,7 +1,7 @@
 import { NavbarAr } from "@/components/layout/NavbarAr";
 import { FooterAr } from "@/components/layout/FooterAr";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Trophy, Target, Users, Zap, Star, UserPlus, LogIn, Shield, Settings, Gamepad2, Crown, Flame, Medal } from "lucide-react";
+import { ChevronLeft, Trophy, Target, Users, Zap, Star, UserPlus, LogIn, Shield, Settings, Gamepad2, Crown, Flame, Medal, CheckCircle, TrendingUp, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { translations as t } from "@/lib/translations";
 import { Helmet } from "react-helmet-async";
@@ -37,6 +37,39 @@ const features = [
     description: "تابع نتائج المباريات لحظة بلحظة مع تحديثات فورية",
     gradient: "from-blue-500 to-cyan-500",
   },
+];
+
+const howItWorks = [
+  {
+    step: 1,
+    icon: UserPlus,
+    title: "سجّل حسابك",
+    description: "أنشئ حسابك المجاني في ثوانٍ معدودة",
+  },
+  {
+    step: 2,
+    icon: Target,
+    title: "اختر مباراتك",
+    description: "تصفح المباريات القادمة واختر ما تريد التوقع عليه",
+  },
+  {
+    step: 3,
+    icon: Award,
+    title: "قدّم توقعك",
+    description: "توقع النتيجة والهداف الأول والركنيات والبطاقات",
+  },
+  {
+    step: 4,
+    icon: Trophy,
+    title: "اربح النقاط",
+    description: "احصل على نقاط لكل توقع صحيح وتنافس على الجوائز",
+  },
+];
+
+const prizes = [
+  { place: "المركز الأول", prize: "1000", icon: "🥇", gradient: "from-yellow-500 to-amber-600" },
+  { place: "المركز الثاني", prize: "500", icon: "🥈", gradient: "from-slate-400 to-slate-500" },
+  { place: "المركز الثالث", prize: "250", icon: "🥉", gradient: "from-amber-700 to-orange-800" },
 ];
 
 const adminSteps = [
@@ -81,11 +114,10 @@ const IndexAr = () => {
         <NavbarAr />
         
         <main>
-          {/* Hero Section - Gaming Style */}
+          {/* Hero Section */}
           <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
             {/* Animated Background */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              {/* Grid Pattern */}
               <div 
                 className="absolute inset-0 opacity-[0.03]"
                 style={{
@@ -94,12 +126,10 @@ const IndexAr = () => {
                 }}
               />
               
-              {/* Gradient Orbs */}
               <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse-slow" />
               <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-accent/20 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: "1s" }} />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px]" />
               
-              {/* Floating Elements */}
               <div className="absolute top-20 right-20 animate-float">
                 <div className="w-16 h-16 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center backdrop-blur-sm">
                   <Trophy className="w-8 h-8 text-primary" />
@@ -124,7 +154,6 @@ const IndexAr = () => {
 
             <div className="container mx-auto px-4 relative z-10">
               <div className="max-w-5xl mx-auto text-center">
-                {/* Gaming Badge */}
                 <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full gaming-card mb-8 animate-fade-in">
                   <div className="flex items-center gap-1">
                     <div className="w-2 h-2 rounded-full bg-live animate-pulse" />
@@ -135,19 +164,16 @@ const IndexAr = () => {
                   <span className="text-sm font-bold text-primary">الدوري المصري الممتاز</span>
                 </div>
 
-                {/* Title */}
                 <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold mb-6 animate-fade-in leading-tight">
                   <span className="gradient-text">{t.heroTitle}</span>
                   <br />
                   <span className="gradient-text-gold">{t.heroSubtitle}</span>
                 </h1>
 
-                {/* Description */}
                 <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: "0.2s" }}>
                   {t.heroDescription}
                 </p>
 
-                {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
                   <Button variant="hero" size="xl" asChild className="group relative overflow-hidden">
                     <Link to="/matches">
@@ -165,7 +191,6 @@ const IndexAr = () => {
                   </Button>
                 </div>
 
-                {/* Stats - Gaming Style */}
                 <div className="flex items-center justify-center gap-4 md:gap-8 mt-16 animate-fade-in" style={{ animationDelay: "0.4s" }}>
                   {stats.map((stat, index) => (
                     <div key={index} className="gaming-card px-6 py-4 rounded-2xl">
@@ -186,7 +211,6 @@ const IndexAr = () => {
               </div>
             </div>
 
-            {/* Scroll Indicator */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
               <div className="w-6 h-10 rounded-full border-2 border-primary/50 flex items-start justify-center p-2">
                 <div className="w-1.5 h-3 bg-primary rounded-full animate-pulse" />
@@ -194,7 +218,49 @@ const IndexAr = () => {
             </div>
           </section>
 
-          {/* Features Section - Gaming Style */}
+          {/* How It Works Section */}
+          <section className="py-24 relative bg-gradient-to-b from-transparent via-primary/5 to-transparent">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-6">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-bold text-primary">كيف يعمل</span>
+                </div>
+                <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
+                  ابدأ التوقع في <span className="gradient-text">4 خطوات</span>
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+                  عملية بسيطة وسهلة للبدء في التوقع والمنافسة
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                {howItWorks.map((item, index) => (
+                  <div
+                    key={index}
+                    className="relative text-center animate-fade-in"
+                    style={{ animationDelay: `${index * 0.15}s` }}
+                  >
+                    {/* Connector Line */}
+                    {index < howItWorks.length - 1 && (
+                      <div className="hidden lg:block absolute top-12 -left-4 w-8 h-0.5 bg-gradient-to-l from-primary/50 to-transparent" />
+                    )}
+                    
+                    <div className="gaming-card rounded-2xl p-6 h-full hover:scale-105 transition-all duration-300">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <item.icon className="w-7 h-7 text-white" />
+                      </div>
+                      <div className="text-xs text-primary font-bold mb-2">الخطوة {item.step}</div>
+                      <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Features Section */}
           <section className="py-24 relative">
             <div className="container mx-auto px-4">
               <div className="text-center mb-16">
@@ -228,6 +294,45 @@ const IndexAr = () => {
             </div>
           </section>
 
+          {/* Prizes Section */}
+          <section className="py-24 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-primary/5 pointer-events-none" />
+            
+            <div className="container mx-auto px-4 relative z-10">
+              <div className="text-center mb-16">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 mb-6">
+                  <Trophy className="w-4 h-4 text-accent" />
+                  <span className="text-sm font-bold text-accent">الجوائز</span>
+                </div>
+                <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
+                  جوائز <span className="gradient-text-gold">قيّمة</span> بانتظارك
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+                  تنافس على المراكز الأولى واربح جوائز مالية ومكافآت حصرية
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                {prizes.map((prize, index) => (
+                  <div
+                    key={index}
+                    className="gaming-card rounded-3xl p-8 text-center hover:scale-105 transition-all duration-300 animate-fade-in relative overflow-hidden"
+                    style={{ animationDelay: `${index * 0.15}s` }}
+                  >
+                    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${prize.gradient} -mr-10 -mt-10 rounded-full opacity-20 blur-2xl`} />
+                    
+                    <div className="text-5xl mb-4">{prize.icon}</div>
+                    <h3 className="font-bold text-xl mb-2">{prize.place}</h3>
+                    <div className={`text-4xl font-display font-bold bg-gradient-to-r ${prize.gradient} bg-clip-text text-transparent`}>
+                      {prize.prize}
+                    </div>
+                    <span className="text-muted-foreground text-sm">{t.currency}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* Admin Registration Steps Section */}
           <section className="py-24 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5 pointer-events-none" />
@@ -253,12 +358,10 @@ const IndexAr = () => {
                     className="relative gaming-card rounded-2xl p-6 text-center hover:scale-105 transition-all duration-300 animate-fade-in group"
                     style={{ animationDelay: `${index * 0.15}s` }}
                   >
-                    {/* Step Number Badge */}
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground flex items-center justify-center font-bold text-lg shadow-lg">
                       {item.step}
                     </div>
                     
-                    {/* Connector Line */}
                     {index < adminSteps.length - 1 && (
                       <div className="hidden lg:block absolute top-8 -left-3 w-6 h-1 bg-gradient-to-l from-primary/50 to-transparent rounded-full" />
                     )}
@@ -272,7 +375,6 @@ const IndexAr = () => {
                 ))}
               </div>
 
-              {/* Quick Access Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
                 <Button variant="hero" size="lg" asChild>
                   <Link to="/auth">
@@ -290,11 +392,10 @@ const IndexAr = () => {
             </div>
           </section>
 
-          {/* CTA Section - Gaming Style */}
+          {/* CTA Section */}
           <section className="py-24 relative overflow-hidden">
             <div className="container mx-auto px-4 relative z-10">
               <div className="max-w-4xl mx-auto text-center gaming-card rounded-3xl p-12 gaming-glow">
-                {/* Trophy Animation */}
                 <div className="relative w-24 h-24 mx-auto mb-8">
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent to-yellow-600 animate-pulse" />
                   <div className="absolute inset-1 rounded-xl bg-card flex items-center justify-center">
