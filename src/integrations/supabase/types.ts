@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      contest_settings: {
+        Row: {
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expense_date: string
+          id: string
+          title: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       leagues: {
         Row: {
           api_id: number | null
@@ -53,12 +113,14 @@ export type Database = {
       matches: {
         Row: {
           api_id: number | null
+          away_coach: string | null
           away_formation: string | null
           away_lineup: Json | null
           away_score: number | null
           away_substitutes: Json | null
           away_team_id: string | null
           created_at: string | null
+          home_coach: string | null
           home_formation: string | null
           home_lineup: Json | null
           home_score: number | null
@@ -67,18 +129,24 @@ export type Database = {
           id: string
           kickoff_time: string
           league_id: string | null
+          match_details: Json | null
           match_stats: Json | null
+          referee: string | null
+          stadium: string | null
           status: string | null
           updated_at: string | null
+          weather: string | null
         }
         Insert: {
           api_id?: number | null
+          away_coach?: string | null
           away_formation?: string | null
           away_lineup?: Json | null
           away_score?: number | null
           away_substitutes?: Json | null
           away_team_id?: string | null
           created_at?: string | null
+          home_coach?: string | null
           home_formation?: string | null
           home_lineup?: Json | null
           home_score?: number | null
@@ -87,18 +155,24 @@ export type Database = {
           id?: string
           kickoff_time: string
           league_id?: string | null
+          match_details?: Json | null
           match_stats?: Json | null
+          referee?: string | null
+          stadium?: string | null
           status?: string | null
           updated_at?: string | null
+          weather?: string | null
         }
         Update: {
           api_id?: number | null
+          away_coach?: string | null
           away_formation?: string | null
           away_lineup?: Json | null
           away_score?: number | null
           away_substitutes?: Json | null
           away_team_id?: string | null
           created_at?: string | null
+          home_coach?: string | null
           home_formation?: string | null
           home_lineup?: Json | null
           home_score?: number | null
@@ -107,9 +181,13 @@ export type Database = {
           id?: string
           kickoff_time?: string
           league_id?: string | null
+          match_details?: Json | null
           match_stats?: Json | null
+          referee?: string | null
+          stadium?: string | null
           status?: string | null
           updated_at?: string | null
+          weather?: string | null
         }
         Relationships: [
           {
