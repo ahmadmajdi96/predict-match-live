@@ -50,7 +50,7 @@ export default function StandingsAr() {
     try {
       setLoading(true);
       const { data, error } = await supabase.functions.invoke("football-api", {
-        body: { action: "getStandings", leagueId: "233", season: "2024" },
+        body: { action: "getStandings", leagueId: "233", season: "2025" },
       });
 
       if (error) throw error;
@@ -129,7 +129,7 @@ export default function StandingsAr() {
                 <Trophy className="w-8 h-8 text-primary" />
                 ترتيب الدوري المصري
               </h1>
-              <p className="text-muted-foreground">موسم 2024/2025</p>
+              <p className="text-muted-foreground">موسم 2025/2026</p>
             </div>
             <Button
               variant="outline"
