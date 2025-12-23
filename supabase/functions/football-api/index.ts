@@ -13,7 +13,7 @@ const API_BASE = 'https://v3.football.api-sports.io';
 const EGYPTIAN_LEAGUE_ID = 233;
 
 // Current season - API-Football uses the year the season starts
-const CURRENT_SEASON = '2024'; // 2024-2025 season
+const CURRENT_SEASON = '2025'; // 2025-2026 season
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
