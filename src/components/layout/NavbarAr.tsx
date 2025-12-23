@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Trophy, LayoutDashboard, Shield, User, LogOut } from "lucide-react";
+import { Menu, X, Trophy, LayoutDashboard, Shield, User, LogOut, Medal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { translations as t } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const navLinks = [
   { href: "/", label: t.home, icon: null },
   { href: "/matches", label: t.matches, icon: null },
+  { href: "/standings", label: t.standings, icon: Medal },
   { href: "/leaderboard", label: t.leaderboard, icon: Trophy },
   { href: "/dashboard", label: t.dashboard, icon: LayoutDashboard },
 ];
