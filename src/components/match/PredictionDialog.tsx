@@ -75,8 +75,8 @@ export function PredictionDialog({
         predicted_first_scorer_id: firstScorer || null,
         predicted_total_corners: totalCorners ? parseInt(totalCorners) : null,
         predicted_total_cards: totalCards ? parseInt(totalCards) : null,
-        is_paid: predictionPrice > 0,
-        amount_paid: predictionPrice,
+        is_paid: false,
+        amount_paid: 0,
       });
 
       if (error) throw error;
@@ -115,14 +115,10 @@ export function PredictionDialog({
           </div>
         </div>
 
-        {/* Price */}
-        {predictionPrice > 0 && (
-          <div className="bg-accent/10 border border-accent/30 rounded-lg p-3 text-center">
-            <span className="text-accent font-bold">
-              {t.predictionPrice}: {predictionPrice} {t.currency}
-            </span>
-          </div>
-        )}
+        {/* Free Prediction Notice */}
+        <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 text-center">
+          <span className="text-primary font-bold">التوقع مجاني - الثلاثة الأوائل يفوزون بالجوائز!</span>
+        </div>
 
         {/* Prediction Form */}
         <div className="space-y-4 mt-4">
