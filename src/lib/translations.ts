@@ -2,6 +2,7 @@ export const translations = {
   // Navigation
   home: 'الرئيسية',
   matches: 'المباريات',
+  standings: 'الترتيب',
   leaderboard: 'المتصدرين',
   dashboard: 'لوحة التحكم',
   admin: 'الإدارة',
