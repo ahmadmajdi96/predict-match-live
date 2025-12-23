@@ -28,11 +28,30 @@ serve(async (req) => {
 
     // Get League Table/Standings
     if (action === 'getStandings') {
-      const response = await fetch(
-        `${SPORTSDB_BASE}/lookuptable.php?l=${EGYPTIAN_LEAGUE_ID}&s=${currentSeason}`
-      );
-      const data = await response.json();
-      console.log('Standings response:', JSON.stringify(data).slice(0, 500));
+      const url = `${SPORTSDB_BASE}/lookuptable.php?l=${EGYPTIAN_LEAGUE_ID}&s=${currentSeason}`;
+      console.log('Fetching standings from:', url);
+      
+      const response = await fetch(url);
+      const text = await response.text();
+      console.log('Raw standings response:', text.slice(0, 500));
+      
+      // Handle empty or invalid response
+      if (!text || text.trim() === '') {
+        console.log('Empty response, returning empty standings');
+        return new Response(JSON.stringify({ response: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        return new Response(JSON.stringify({ response: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
       if (data.table && data.table.length > 0) {
         // Transform to match our expected format
