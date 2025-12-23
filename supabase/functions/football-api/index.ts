@@ -12,6 +12,9 @@ const API_BASE = 'https://v3.football.api-sports.io';
 // Egyptian Premier League ID in API-Football
 const EGYPTIAN_LEAGUE_ID = 233;
 
+// Current season - API-Football uses the year the season starts
+const CURRENT_SEASON = '2024'; // 2024-2025 season
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -31,10 +34,10 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, leagueId, season, matchId } = await req.json();
-    const currentSeason = season || '2023'; // Free API plan supports 2021-2023
+    const { action, season, matchId } = await req.json();
+    const currentSeason = season || CURRENT_SEASON;
 
-    console.log(`Action: ${action}, League: ${leagueId || EGYPTIAN_LEAGUE_ID}, Season: ${currentSeason}`);
+    console.log(`Action: ${action}, League: ${EGYPTIAN_LEAGUE_ID}, Season: ${currentSeason}`);
 
     const headers = {
       'x-apisports-key': apiKey,
@@ -45,7 +48,7 @@ serve(async (req) => {
       console.log('Fetching:', url);
       const response = await fetch(url, { headers });
       const text = await response.text();
-      console.log('Response status:', response.status, 'Body preview:', text.slice(0, 300));
+      console.log('Response status:', response.status, 'Body preview:', text.slice(0, 500));
       
       if (!text || text.trim() === '') {
         console.log('Empty response');
@@ -65,6 +68,26 @@ serve(async (req) => {
       }
     };
 
+    // Get available seasons for Egyptian League
+    if (action === 'getSeasons') {
+      const url = `${API_BASE}/leagues?id=${EGYPTIAN_LEAGUE_ID}`;
+      const data = await safeFetch(url);
+      
+      const seasons = data?.response?.[0]?.seasons || [];
+      return new Response(JSON.stringify({
+        success: true,
+        seasons: seasons.map((s: any) => ({
+          year: s.year,
+          start: s.start,
+          end: s.end,
+          current: s.current
+        })),
+        currentSeason: seasons.find((s: any) => s.current)?.year || CURRENT_SEASON
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Get League Standings
     if (action === 'getStandings') {
       const url = `${API_BASE}/standings?league=${EGYPTIAN_LEAGUE_ID}&season=${currentSeason}`;
@@ -78,32 +101,38 @@ serve(async (req) => {
         });
       }
 
-      // If no standings, return the API errors for debugging
       return new Response(JSON.stringify({ 
         response: [], 
         errors: data?.errors,
-        message: data?.message 
+        message: data?.message,
+        season: currentSeason
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Test API connection - list leagues
+    // Test API connection
     if (action === 'testConnection') {
-      const url = `${API_BASE}/leagues`;
+      const url = `${API_BASE}/leagues?id=${EGYPTIAN_LEAGUE_ID}`;
       const data = await safeFetch(url);
+      
+      const leagueInfo = data?.response?.[0];
+      const seasons = leagueInfo?.seasons || [];
+      const currentSeasonInfo = seasons.find((s: any) => s.current);
       
       return new Response(JSON.stringify({
         success: data?.results > 0,
-        results: data?.results,
+        league: leagueInfo?.league,
+        country: leagueInfo?.country,
+        currentSeason: currentSeasonInfo?.year,
+        availableSeasons: seasons.map((s: any) => s.year),
         errors: data?.errors,
-        message: data?.message,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Sync Teams from API-Football
+    // Sync Teams
     if (action === 'syncTeams') {
       const url = `${API_BASE}/teams?league=${EGYPTIAN_LEAGUE_ID}&season=${currentSeason}`;
       const data = await safeFetch(url);
@@ -111,7 +140,11 @@ serve(async (req) => {
       console.log(`Fetched ${data?.results || 0} teams`);
 
       if (!data?.response || data.response.length === 0) {
-        return new Response(JSON.stringify({ error: 'No teams found', apiErrors: data?.errors }), {
+        return new Response(JSON.stringify({ 
+          error: 'No teams found', 
+          apiErrors: data?.errors,
+          season: currentSeason 
+        }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -167,15 +200,16 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         success: true, 
         teamsCount: teamsToUpsert.length,
-        teams: teamsToUpsert.map((t: any) => t.name)
+        teams: teamsToUpsert.map((t: any) => t.name),
+        season: currentSeason
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Sync Matches from API-Football
+    // Sync Matches
     if (action === 'syncMatches') {
-      // Get league from database
+      // Get or create league
       let { data: league } = await supabase
         .from('leagues')
         .select('id')
@@ -221,7 +255,7 @@ serve(async (req) => {
         console.log(`Synced ${teamsToUpsert.length} teams`);
       }
 
-      // Get fixtures from API
+      // Get fixtures
       const url = `${API_BASE}/fixtures?league=${EGYPTIAN_LEAGUE_ID}&season=${currentSeason}`;
       const data = await safeFetch(url);
       
@@ -231,7 +265,8 @@ serve(async (req) => {
         return new Response(JSON.stringify({ 
           success: false, 
           error: 'No fixtures found',
-          apiErrors: data?.errors 
+          apiErrors: data?.errors,
+          season: currentSeason
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -294,6 +329,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         success: true, 
         matchesCount: matchesToUpsert.length,
+        season: currentSeason
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -342,7 +378,7 @@ serve(async (req) => {
 
       let totalPlayers = 0;
 
-      for (const team of teams.slice(0, 5)) { // Limit to 5 teams to avoid rate limits
+      for (const team of teams.slice(0, 5)) {
         try {
           const playersData = await safeFetch(
             `${API_BASE}/players/squads?team=${team.api_id}`
@@ -371,7 +407,6 @@ serve(async (req) => {
             }
           }
 
-          // Rate limiting
           await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (teamError) {
           console.error(`Error fetching players for team ${team.api_id}:`, teamError);
