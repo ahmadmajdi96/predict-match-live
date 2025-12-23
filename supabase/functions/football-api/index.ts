@@ -21,39 +21,39 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, leagueId, season, syncToDb } = await req.json();
+    const { action, leagueId, season } = await req.json();
+    // TheSportsDB uses season format like "2024-2025"
     const currentSeason = season || '2024-2025';
 
     console.log(`Action: ${action}, Season: ${currentSeason}`);
 
+    // Helper function to safely fetch JSON
+    const safeFetch = async (url: string) => {
+      console.log('Fetching:', url);
+      const response = await fetch(url);
+      const text = await response.text();
+      
+      if (!text || text.trim() === '' || text.includes('<!doctype')) {
+        console.log('Empty or HTML response');
+        return null;
+      }
+      
+      try {
+        return JSON.parse(text);
+      } catch {
+        console.log('JSON parse error for:', text.slice(0, 200));
+        return null;
+      }
+    };
+
     // Get League Table/Standings
     if (action === 'getStandings') {
       const url = `${SPORTSDB_BASE}/lookuptable.php?l=${EGYPTIAN_LEAGUE_ID}&s=${currentSeason}`;
-      console.log('Fetching standings from:', url);
+      const data = await safeFetch(url);
       
-      const response = await fetch(url);
-      const text = await response.text();
-      console.log('Raw standings response:', text.slice(0, 500));
-      
-      // Handle empty or invalid response
-      if (!text || text.trim() === '') {
-        console.log('Empty response, returning empty standings');
-        return new Response(JSON.stringify({ response: [] }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+      console.log('Standings data:', JSON.stringify(data).slice(0, 500));
 
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        return new Response(JSON.stringify({ response: [] }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      if (data.table && data.table.length > 0) {
+      if (data?.table && data.table.length > 0) {
         // Transform to match our expected format
         const standings = data.table.map((team: any, index: number) => ({
           rank: parseInt(team.intRank) || index + 1,
@@ -84,21 +84,26 @@ serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ response: [] }), {
+      return new Response(JSON.stringify({ response: [], message: 'No standings data available' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Sync Teams from TheSportsDB
+    // Sync Teams from TheSportsDB - using search by league name
     if (action === 'syncTeams') {
-      const url = `${SPORTSDB_BASE}/lookup_all_teams.php?id=${EGYPTIAN_LEAGUE_ID}`;
-      console.log('Fetching teams from:', url);
-      const response = await fetch(url);
-      const data = await response.json();
-      console.log(`Fetched ${data.teams?.length || 0} teams`);
-      console.log('First team sample:', JSON.stringify(data.teams?.[0]).slice(0, 200));
+      // Try searching by league name instead of ID
+      const searchUrl = `${SPORTSDB_BASE}/search_all_teams.php?l=Egyptian%20Premier%20League`;
+      let data = await safeFetch(searchUrl);
+      
+      // Fallback to lookup by ID
+      if (!data?.teams || data.teams.length === 0) {
+        const lookupUrl = `${SPORTSDB_BASE}/lookup_all_teams.php?id=${EGYPTIAN_LEAGUE_ID}`;
+        data = await safeFetch(lookupUrl);
+      }
+      
+      console.log(`Fetched ${data?.teams?.length || 0} teams`);
 
-      if (!data.teams || data.teams.length === 0) {
+      if (!data?.teams || data.teams.length === 0) {
         return new Response(JSON.stringify({ error: 'No teams found' }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -154,7 +159,8 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({ 
         success: true, 
-        teamsCount: teamsToUpsert.length 
+        teamsCount: teamsToUpsert.length,
+        teams: teamsToUpsert.map((t: any) => t.name)
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -163,55 +169,29 @@ serve(async (req) => {
     // Sync Matches - Get past and upcoming events
     if (action === 'syncMatches') {
       // Get league info
-      const { data: league } = await supabase
+      let { data: league } = await supabase
         .from('leagues')
         .select('id')
         .eq('api_id', parseInt(EGYPTIAN_LEAGUE_ID))
         .maybeSingle();
 
       if (!league) {
-        // First sync teams
-        console.log('League not found, syncing teams first...');
-        const teamsResponse = await fetch(
-          `${SPORTSDB_BASE}/lookup_all_teams.php?id=${EGYPTIAN_LEAGUE_ID}`
-        );
-        const teamsData = await teamsResponse.json();
-
-        if (teamsData.teams) {
-          const { data: newLeague } = await supabase
-            .from('leagues')
-            .insert({
-              api_id: parseInt(EGYPTIAN_LEAGUE_ID),
-              name: 'Egyptian Premier League',
-              name_ar: 'الدوري المصري الممتاز',
-              country: 'Egypt',
-              is_active: true,
-            })
-            .select()
-            .single();
-
-          if (newLeague) {
-            const teamsToUpsert = teamsData.teams.map((team: any) => ({
-              api_id: parseInt(team.idTeam),
-              name: team.strTeam,
-              name_ar: getArabicTeamName(team.strTeam),
-              logo_url: team.strBadge,
-              league_id: newLeague.id
-            }));
-
-            await supabase.from('teams').upsert(teamsToUpsert, { onConflict: 'api_id' });
-          }
-        }
+        // Create league
+        const { data: newLeague } = await supabase
+          .from('leagues')
+          .insert({
+            api_id: parseInt(EGYPTIAN_LEAGUE_ID),
+            name: 'Egyptian Premier League',
+            name_ar: 'الدوري المصري الممتاز',
+            country: 'Egypt',
+            is_active: true,
+          })
+          .select()
+          .single();
+        league = newLeague;
       }
 
-      // Re-fetch league
-      const { data: leagueData } = await supabase
-        .from('leagues')
-        .select('id')
-        .eq('api_id', parseInt(EGYPTIAN_LEAGUE_ID))
-        .maybeSingle();
-
-      if (!leagueData) {
+      if (!league) {
         return new Response(JSON.stringify({ error: 'Failed to create league' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -222,39 +202,35 @@ serve(async (req) => {
       const { data: teams } = await supabase
         .from('teams')
         .select('id, api_id')
-        .eq('league_id', leagueData.id);
+        .eq('league_id', league.id);
 
       const teamMap = new Map(teams?.map(t => [t.api_id, t.id]) || []);
 
       let allEvents: any[] = [];
 
       // Get past events (last 15)
-      const pastResponse = await fetch(
+      const pastData = await safeFetch(
         `${SPORTSDB_BASE}/eventspastleague.php?id=${EGYPTIAN_LEAGUE_ID}`
       );
-      const pastData = await pastResponse.json();
-      if (pastData.events) {
+      if (pastData?.events) {
         allEvents = [...allEvents, ...pastData.events];
       }
-      console.log(`Fetched ${pastData.events?.length || 0} past events`);
+      console.log(`Fetched ${pastData?.events?.length || 0} past events`);
 
       // Get next events (next 15)
-      const nextResponse = await fetch(
+      const nextData = await safeFetch(
         `${SPORTSDB_BASE}/eventsnextleague.php?id=${EGYPTIAN_LEAGUE_ID}`
       );
-      const nextData = await nextResponse.json();
-      if (nextData.events) {
+      if (nextData?.events) {
         allEvents = [...allEvents, ...nextData.events];
       }
-      console.log(`Fetched ${nextData.events?.length || 0} next events`);
+      console.log(`Fetched ${nextData?.events?.length || 0} next events`);
 
-      // Get schedule for current season
-      const scheduleResponse = await fetch(
+      // Get season schedule
+      const scheduleData = await safeFetch(
         `${SPORTSDB_BASE}/eventsseason.php?id=${EGYPTIAN_LEAGUE_ID}&s=${currentSeason}`
       );
-      const scheduleData = await scheduleResponse.json();
-      if (scheduleData.events) {
-        // Add events that aren't already in allEvents
+      if (scheduleData?.events) {
         const existingIds = new Set(allEvents.map(e => e.idEvent));
         for (const event of scheduleData.events) {
           if (!existingIds.has(event.idEvent)) {
@@ -290,14 +266,14 @@ serve(async (req) => {
           }
 
           // Build kickoff time
-          let kickoffTime = event.strTimestamp || `${event.dateEvent}T${event.strTime || '00:00:00'}`;
-          if (!kickoffTime.includes('T')) {
+          let kickoffTime = event.strTimestamp || `${event.dateEvent}T${event.strTime || '18:00:00'}`;
+          if (!kickoffTime.includes('T') && event.dateEvent) {
             kickoffTime = `${event.dateEvent}T${event.strTime || '18:00:00'}`;
           }
 
           return {
             api_id: parseInt(event.idEvent),
-            league_id: leagueData.id,
+            league_id: league.id,
             home_team_id: teamMap.get(homeId),
             away_team_id: teamMap.get(awayId),
             kickoff_time: kickoffTime,
@@ -325,8 +301,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         success: true, 
         matchesCount: matchesToUpsert.length,
-        pastEvents: pastData.events?.length || 0,
-        nextEvents: nextData.events?.length || 0,
+        pastEvents: pastData?.events?.length || 0,
+        nextEvents: nextData?.events?.length || 0,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -350,11 +326,10 @@ serve(async (req) => {
 
       for (const team of teams) {
         try {
-          const playersResponse = await fetch(
+          const playersData = await safeFetch(
             `${SPORTSDB_BASE}/lookup_all_players.php?id=${team.api_id}`
           );
-          const playersData = await playersResponse.json();
-          const players = playersData.player || [];
+          const players = playersData?.player || [];
 
           console.log(`Fetched ${players.length} players for team ${team.api_id}`);
 
