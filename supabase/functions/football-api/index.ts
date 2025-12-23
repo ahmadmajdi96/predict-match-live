@@ -362,11 +362,11 @@ serve(async (req) => {
       });
     }
 
-    // Sync Players
+    // Sync Players - all teams
     if (action === 'syncPlayers') {
       const { data: teams } = await supabase
         .from('teams')
-        .select('id, api_id')
+        .select('id, api_id, name')
         .not('api_id', 'is', null);
 
       if (!teams || teams.length === 0) {
@@ -377,15 +377,17 @@ serve(async (req) => {
       }
 
       let totalPlayers = 0;
+      const syncedTeams: string[] = [];
 
-      for (const team of teams.slice(0, 5)) {
+      // Sync ALL teams
+      for (const team of teams) {
         try {
           const playersData = await safeFetch(
             `${API_BASE}/players/squads?team=${team.api_id}`
           );
           const players = playersData?.response?.[0]?.players || [];
 
-          console.log(`Fetched ${players.length} players for team ${team.api_id}`);
+          console.log(`Fetched ${players.length} players for team ${team.name} (${team.api_id})`);
 
           if (players.length > 0) {
             const playersToUpsert = players.map((p: any, index: number) => ({
@@ -404,16 +406,138 @@ serve(async (req) => {
 
             if (!playersError) {
               totalPlayers += playersToUpsert.length;
+              syncedTeams.push(team.name);
             }
           }
 
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          // Rate limiting - 300ms between requests
+          await new Promise((resolve) => setTimeout(resolve, 300));
         } catch (teamError) {
           console.error(`Error fetching players for team ${team.api_id}:`, teamError);
         }
       }
 
-      return new Response(JSON.stringify({ success: true, playersCount: totalPlayers }), {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        playersCount: totalPlayers,
+        teamsCount: syncedTeams.length,
+        teams: syncedTeams
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Full sync - teams, matches, players (for cron jobs)
+    if (action === 'fullSync') {
+      console.log('Starting full sync...');
+      
+      // Get or create league
+      let { data: league } = await supabase
+        .from('leagues')
+        .select('id')
+        .eq('api_id', EGYPTIAN_LEAGUE_ID)
+        .maybeSingle();
+
+      if (!league) {
+        const { data: newLeague } = await supabase
+          .from('leagues')
+          .insert({
+            api_id: EGYPTIAN_LEAGUE_ID,
+            name: 'Egyptian Premier League',
+            name_ar: 'الدوري المصري الممتاز',
+            country: 'Egypt',
+            is_active: true,
+          })
+          .select()
+          .single();
+        league = newLeague;
+      }
+
+      if (!league) {
+        return new Response(JSON.stringify({ error: 'Failed to create league' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Sync teams
+      const teamsUrl = `${API_BASE}/teams?league=${EGYPTIAN_LEAGUE_ID}&season=${currentSeason}`;
+      const teamsData = await safeFetch(teamsUrl);
+      let teamsCount = 0;
+      
+      if (teamsData?.response && teamsData.response.length > 0) {
+        const teamsToUpsert = teamsData.response.map((item: any) => ({
+          api_id: item.team.id,
+          name: item.team.name,
+          name_ar: getArabicTeamName(item.team.name),
+          logo_url: item.team.logo,
+          league_id: league.id
+        }));
+
+        await supabase.from('teams').upsert(teamsToUpsert, { onConflict: 'api_id' });
+        teamsCount = teamsToUpsert.length;
+        console.log(`Synced ${teamsCount} teams`);
+      }
+
+      // Sync matches
+      const fixturesUrl = `${API_BASE}/fixtures?league=${EGYPTIAN_LEAGUE_ID}&season=${currentSeason}`;
+      const fixturesData = await safeFetch(fixturesUrl);
+      let matchesCount = 0;
+
+      if (fixturesData?.response && fixturesData.response.length > 0) {
+        const { data: teams } = await supabase
+          .from('teams')
+          .select('id, api_id')
+          .eq('league_id', league.id);
+
+        const teamMap = new Map(teams?.map(t => [t.api_id, t.id]) || []);
+
+        const matchesToUpsert = fixturesData.response
+          .filter((fixture: any) => {
+            return teamMap.has(fixture.teams.home.id) && teamMap.has(fixture.teams.away.id);
+          })
+          .map((fixture: any) => {
+            let status = 'upcoming';
+            const fixtureStatus = fixture.fixture.status.short;
+            
+            if (['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE'].includes(fixtureStatus)) {
+              status = 'live';
+            } else if (['FT', 'AET', 'PEN'].includes(fixtureStatus)) {
+              status = 'finished';
+            } else if (['PST', 'CANC', 'ABD', 'AWD', 'WO'].includes(fixtureStatus)) {
+              status = 'postponed';
+            }
+
+            return {
+              api_id: fixture.fixture.id,
+              league_id: league.id,
+              home_team_id: teamMap.get(fixture.teams.home.id),
+              away_team_id: teamMap.get(fixture.teams.away.id),
+              kickoff_time: fixture.fixture.date,
+              home_score: fixture.goals.home,
+              away_score: fixture.goals.away,
+              status,
+              stadium: fixture.fixture.venue?.name || null,
+              referee: fixture.fixture.referee || null,
+            };
+          });
+
+        if (matchesToUpsert.length > 0) {
+          await supabase.from('matches').upsert(matchesToUpsert, { onConflict: 'api_id' });
+          matchesCount = matchesToUpsert.length;
+        }
+        console.log(`Synced ${matchesCount} matches`);
+      }
+
+      console.log('Full sync completed');
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        teamsCount,
+        matchesCount,
+        season: currentSeason,
+        timestamp: new Date().toISOString()
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
