@@ -6,9 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// API-Football via RapidAPI
-const RAPIDAPI_HOST = 'api-football-v1.p.rapidapi.com';
-const API_BASE = `https://${RAPIDAPI_HOST}/v3`;
+// API-Football Direct API (api-sports.io)
+const API_BASE = 'https://v3.football.api-sports.io';
 
 // Egyptian Premier League ID in API-Football
 const EGYPTIAN_LEAGUE_ID = 233;
@@ -33,13 +32,12 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { action, leagueId, season, matchId } = await req.json();
-    const currentSeason = season || '2024';
+    const currentSeason = season || '2023'; // Free API plan supports 2021-2023
 
     console.log(`Action: ${action}, League: ${leagueId || EGYPTIAN_LEAGUE_ID}, Season: ${currentSeason}`);
 
     const headers = {
-      'x-rapidapi-host': RAPIDAPI_HOST,
-      'x-rapidapi-key': apiKey,
+      'x-apisports-key': apiKey,
     };
 
     // Helper function to safely fetch JSON
