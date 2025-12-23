@@ -35,30 +35,73 @@ interface Match {
   } | null;
 }
 
-// Check if we need to auto-sync (once per session, max every 30 minutes)
-const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+// Auto-sync interval: 6 hours
+const SYNC_INTERVAL = 6 * 60 * 60 * 1000;
 const LAST_SYNC_KEY = 'lastMatchesSync';
+
+async function performSync() {
+  console.log('Starting match sync...');
+  
+  try {
+    // Sync teams first
+    const teamsResponse = await supabase.functions.invoke('football-api', {
+      body: { action: 'syncTeams', syncToDb: true, leagueId: '233' }
+    });
+
+    if (teamsResponse.error) {
+      console.error('Teams sync error:', teamsResponse.error);
+      throw new Error('Failed to sync teams');
+    }
+
+    console.log('Teams synced:', teamsResponse.data);
+
+    // Sync matches
+    const matchesResponse = await supabase.functions.invoke('football-api', {
+      body: { action: 'syncMatches', syncToDb: true, leagueId: '233' }
+    });
+
+    if (matchesResponse.error) {
+      console.error('Matches sync error:', matchesResponse.error);
+      throw new Error('Failed to sync matches');
+    }
+
+    console.log('Matches synced:', matchesResponse.data);
+
+    // Sync players
+    const playersResponse = await supabase.functions.invoke('football-api', {
+      body: { action: 'syncPlayers', syncToDb: true }
+    });
+
+    if (playersResponse.error) {
+      console.error('Players sync error:', playersResponse.error);
+      // Don't throw - players sync is optional
+    } else {
+      console.log('Players synced:', playersResponse.data);
+    }
+
+    localStorage.setItem(LAST_SYNC_KEY, Date.now().toString());
+    return true;
+  } catch (error) {
+    console.error('Sync error:', error);
+    throw error;
+  }
+}
 
 async function autoSyncIfNeeded() {
   const lastSync = localStorage.getItem(LAST_SYNC_KEY);
   const now = Date.now();
   
   if (lastSync && now - parseInt(lastSync) < SYNC_INTERVAL) {
-    return; // Already synced recently
+    console.log('Skipping sync - synced recently');
+    return false;
   }
   
   try {
-    await supabase.functions.invoke('football-api', {
-      body: { action: 'syncTeams', syncToDb: true, leagueId: '233' }
-    });
-    
-    await supabase.functions.invoke('football-api', {
-      body: { action: 'syncMatches', syncToDb: true, leagueId: '233' }
-    });
-    
-    localStorage.setItem(LAST_SYNC_KEY, now.toString());
+    await performSync();
+    return true;
   } catch (error) {
-    toast.error('فشل في مزامنة المباريات تلقائياً');
+    console.error('Auto sync failed:', error);
+    return false;
   }
 }
 
@@ -66,13 +109,14 @@ export function useMatches(status?: string) {
   return useQuery({
     queryKey: ['matches', status],
     queryFn: async () => {
-      // First, check if we have matches
+      // Check if we have matches
       const { count } = await supabase
         .from('matches')
         .select('*', { count: 'exact', head: true });
       
-      // If no matches, trigger auto-sync
-      if (count === 0) {
+      // If no matches or very few, trigger auto-sync
+      if (!count || count < 5) {
+        console.log('No matches found, triggering sync...');
         await autoSyncIfNeeded();
       }
       
@@ -106,32 +150,18 @@ export function useSyncMatches() {
 
   return useMutation({
     mutationFn: async () => {
-      // First sync teams
-      const teamsResponse = await supabase.functions.invoke('football-api', {
-        body: { action: 'syncTeams', syncToDb: true, leagueId: '233' }
-      });
-
-      if (teamsResponse.error) {
-        throw new Error('Failed to sync teams');
-      }
-
-      // Then sync matches
-      const matchesResponse = await supabase.functions.invoke('football-api', {
-        body: { action: 'syncMatches', syncToDb: true, leagueId: '233' }
-      });
-
-      if (matchesResponse.error) {
-        throw new Error('Failed to sync matches');
-      }
-
-      return matchesResponse.data;
+      toast.loading('جاري مزامنة المباريات من API...', { id: 'sync' });
+      await performSync();
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matches'] });
-      toast.success('تم تحديث المباريات بنجاح');
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      toast.success('تم تحديث المباريات واللاعبين بنجاح', { id: 'sync' });
     },
-    onError: () => {
-      toast.error('فشل في تحديث المباريات');
+    onError: (error) => {
+      console.error('Sync mutation error:', error);
+      toast.error('فشل في تحديث المباريات', { id: 'sync' });
     },
   });
 }
@@ -192,7 +222,6 @@ export function useRealtimeNotifications(userId: string | undefined) {
         },
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
-          // Show toast for new notification
           const notification = payload.new as any;
           toast(notification.title, {
             description: notification.message,

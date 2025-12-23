@@ -199,8 +199,8 @@ export function MatchPredictionDialog({
         predicted_first_scorer_id: firstScorer || null,
         predicted_total_corners: totalCorners ? parseInt(totalCorners) : null,
         predicted_total_cards: totalCards ? parseInt(totalCards) : null,
-        is_paid: match.predictionPrice > 0,
-        amount_paid: match.predictionPrice,
+        is_paid: false,
+        amount_paid: 0,
       });
 
       if (error) throw error;
@@ -387,22 +387,16 @@ export function MatchPredictionDialog({
                   </div>
                 </div>
 
-                {/* Prediction Price */}
+                {/* Free Prediction Notice */}
                 <div className="gaming-card p-4 space-y-3">
-                  <h3 className="font-semibold flex items-center gap-2 text-accent">
+                  <h3 className="font-semibold flex items-center gap-2 text-primary">
                     <Trophy className="w-4 h-4" />
-                    سعر التوقع
+                    نظام النقاط
                   </h3>
                   <div className="text-center py-4">
-                    {match.predictionPrice > 0 ? (
-                      <div className="text-3xl font-bold text-accent">
-                        {match.predictionPrice} <span className="text-lg">{t.currency}</span>
-                      </div>
-                    ) : (
-                      <div className="text-2xl font-bold text-primary">مجاني</div>
-                    )}
+                    <div className="text-2xl font-bold text-primary">مجاني</div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {canPredict ? "متاح للتوقع الآن" : "انتهى وقت التوقع"}
+                      الثلاثة الأوائل في الترتيب يفوزون بالجوائز!
                     </p>
                   </div>
                 </div>

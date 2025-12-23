@@ -171,7 +171,6 @@ export function PredictionHistory() {
                   <TableHead className="text-right">الركنيات</TableHead>
                   <TableHead className="text-right">البطاقات</TableHead>
                   <TableHead className="text-right">النقاط</TableHead>
-                  <TableHead className="text-right">المبلغ</TableHead>
                   <TableHead className="text-right">التاريخ</TableHead>
                   <TableHead className="text-right">الحالة</TableHead>
                 </TableRow>
@@ -179,7 +178,7 @@ export function PredictionHistory() {
               <TableBody>
                 {predictions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12">
+                    <TableCell colSpan={7} className="text-center py-12">
                       <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground">لم تقم بأي توقعات بعد</p>
                     </TableCell>
@@ -208,13 +207,6 @@ export function PredictionHistory() {
                         )}>
                           {prediction.points_earned || 0}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        {prediction.is_paid ? (
-                          <span>{prediction.amount_paid} {t.currency}</span>
-                        ) : (
-                          <Badge variant="secondary">مجاني</Badge>
-                        )}
                       </TableCell>
                       <TableCell className="text-sm">
                         {new Date(prediction.created_at).toLocaleDateString('ar-EG')}

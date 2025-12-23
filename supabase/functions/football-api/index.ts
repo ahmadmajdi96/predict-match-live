@@ -90,8 +90,71 @@ serve(async (req) => {
         params.append('season', currentSeason);
         break;
 
+      case 'syncPlayers':
+        // This will be handled separately below
+        break;
+
       default:
         throw new Error('Invalid action');
+    }
+
+    // Handle syncPlayers separately
+    if (action === 'syncPlayers') {
+      const { data: teams } = await supabase
+        .from('teams')
+        .select('id, api_id')
+        .not('api_id', 'is', null);
+
+      if (!teams || teams.length === 0) {
+        return new Response(JSON.stringify({ error: 'No teams found. Please sync teams first.' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      let totalPlayers = 0;
+
+      for (const team of teams) {
+        try {
+          const playersResponse = await fetch(
+            `${baseUrl}/players/squads?team=${team.api_id}`,
+            { headers }
+          );
+          const playersData = await playersResponse.json();
+          const squad = playersData.response?.[0]?.players || [];
+
+          console.log(`Fetched ${squad.length} players for team ${team.api_id}`);
+
+          if (squad.length > 0) {
+            const playersToUpsert = squad.map((p: any, index: number) => ({
+              api_id: p.id,
+              team_id: team.id,
+              name: p.name,
+              jersey_number: p.number || index + 1,
+              position: mapPosition(p.position),
+              photo_url: p.photo,
+              is_substitute: index >= 11,
+            }));
+
+            const { error: playersError } = await supabase
+              .from('players')
+              .upsert(playersToUpsert, { onConflict: 'api_id' });
+
+            if (!playersError) {
+              totalPlayers += playersToUpsert.length;
+            }
+          }
+
+          // Rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        } catch (teamError) {
+          console.error(`Error fetching players for team ${team.api_id}:`, teamError);
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, playersCount: totalPlayers }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const response = await fetch(`${baseUrl}${endpoint}?${params}`, { headers });
@@ -103,7 +166,7 @@ serve(async (req) => {
           .from('leagues')
           .select('id')
           .eq('api_id', parseInt(leagueId || '233'))
-          .single();
+          .maybeSingle();
 
         let leagueUuid: string;
         if (!existingLeague) {
@@ -115,7 +178,7 @@ serve(async (req) => {
               name_ar: 'الدوري المصري الممتاز',
               country: 'Egypt',
               is_active: true,
-              prediction_price: 10
+              prediction_price: 0
             })
             .select()
             .single();
@@ -144,7 +207,7 @@ serve(async (req) => {
           .from('leagues')
           .select('id')
           .eq('api_id', parseInt(leagueId || '233'))
-          .single();
+          .maybeSingle();
 
         if (!league) {
           throw new Error('League not found. Please sync teams first.');
@@ -199,6 +262,16 @@ serve(async (req) => {
     });
   }
 });
+
+function mapPosition(position: string): string {
+  const posMap: Record<string, string> = {
+    'Goalkeeper': 'GK',
+    'Defender': 'DF',
+    'Midfielder': 'MF',
+    'Attacker': 'FW',
+  };
+  return posMap[position] || position || 'MF';
+}
 
 function getArabicTeamName(englishName: string): string {
   const arabicNames: Record<string, string> = {
