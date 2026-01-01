@@ -261,6 +261,7 @@ const MatchesAr = () => {
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <MatchCardAr
+                      matchId={match.id}
                       homeTeam={{
                         name: match.homeTeam.name,
                         nameAr: match.homeTeam.nameAr,

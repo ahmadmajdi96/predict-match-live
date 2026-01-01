@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Clock, MapPin, ChevronLeft, Eye } from "lucide-react";
+import { Clock, MapPin, ChevronLeft, Eye, Info } from "lucide-react";
 import { translations as t } from "@/lib/translations";
+import { useNavigate } from "react-router-dom";
 
 interface Team {
   name: string;
@@ -11,6 +12,7 @@ interface Team {
 }
 
 interface MatchCardArProps {
+  matchId?: string;
   homeTeam: Team;
   awayTeam: Team;
   league: string;
@@ -26,6 +28,7 @@ interface MatchCardArProps {
 }
 
 export function MatchCardAr({
+  matchId,
   homeTeam,
   awayTeam,
   league,
@@ -39,6 +42,7 @@ export function MatchCardAr({
   onPredict,
   onViewFormation,
 }: MatchCardArProps) {
+  const navigate = useNavigate();
   return (
     <div className={cn("match-card group", className)}>
       {/* Status Badge */}
@@ -143,6 +147,16 @@ export function MatchCardAr({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-6">
+        {matchId && (
+          <Button
+            variant="outline"
+            className="flex-1 text-xs sm:text-sm"
+            onClick={() => navigate(`/matches/${matchId}`)}
+          >
+            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            التفاصيل
+          </Button>
+        )}
         {onViewFormation && (
           <Button
             variant="glass"

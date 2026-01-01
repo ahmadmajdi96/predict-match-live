@@ -7,6 +7,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import IndexAr from "./pages/IndexAr";
 import MatchesAr from "./pages/MatchesAr";
+import MatchDetailsAr from "./pages/MatchDetailsAr";
 import StandingsAr from "./pages/StandingsAr";
 import LeaderboardAr from "./pages/LeaderboardAr";
 import DashboardAr from "./pages/DashboardAr";
@@ -27,6 +28,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<IndexAr />} />
               <Route path="/matches" element={<MatchesAr />} />
+              <Route path="/matches/:matchId" element={<MatchDetailsAr />} />
               <Route path="/standings" element={<StandingsAr />} />
               <Route path="/leaderboard" element={<LeaderboardAr />} />
               <Route path="/dashboard" element={<DashboardAr />} />
